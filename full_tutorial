@@ -1,0 +1,24 @@
+getARI <- function(seurobj) {
+        for (i in seq(from = 0.1, to = 2, by = 0.1)) {
+                seurobj <- FindClusters(seurobj, resolution = i)
+        }
+        return(seurobj)
+}
+
+getARImax <- function(seurobj) {
+        ARI <- data.frame()
+        for(i in seq(from = 0.5, to = 1.5, by = 0.5)) {
+                for(j in seq(from = 1, to = 2, by = 0.5)) {
+                        names <- "mousedata"
+                        Var1 <- noquote(paste0(names,"@meta.data$RNA_snn_res.",i))
+                        Var2 <- noquote(paste0(names,"@meta.data$RNA_snn_res.",j))
+                        ARI_tmp<- compare(Var1, Var2, method = "adjusted.rand")
+                        ARI <- rbind(ARI_tmp)
+                        }
+                }
+        ARI <- max(ARI)
+        print(ARI)
+        return(ARI)
+        return(seurobj)
+}
+
