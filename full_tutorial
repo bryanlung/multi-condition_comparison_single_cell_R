@@ -1,24 +1,22 @@
 getARI <- function(seurobj) {
-        for (i in seq(from = 0.1, to = 2, by = 0.1)) {
+        for (i in seq(from = 0.25, to = 2, by = 0.25)) {
                 seurobj <- FindClusters(seurobj, resolution = i)
+}
+        tmp <-  1
+        ARI <- c()
+        names1 <- c()
+        for(i in seq(from = 0.25, to = 1.75, by = 0.25)) {
+                j = i + 0.25
+                Var1 <- seurobj@meta.data[, paste0("RNA_snn_res.",i)]
+                Var2 <- seurobj@meta.data[, paste0("RNA_snn_res.",j)]
+                Var3 <- noquote(paste0("RNA_snn_res.",j))
+                ARI[tmp] <- compare(Var1, Var2, method = "adjusted.rand")
+                names1[tmp] <- Var3
+                tmp <- tmp + 1
         }
+        names(ARI) <- names1
+        Var4 <- names(ARI[which(max(ARI)== ARI)])
+        Var4 <- as.numeric(noquote(sub("RNA_snn_res.", "", Var4)))
+        seurobj <- FindClusters(seurobj, resolution = Var4)
         return(seurobj)
 }
-
-getARImax <- function(seurobj) {
-        ARI <- data.frame()
-        for(i in seq(from = 0.5, to = 1.5, by = 0.5)) {
-                for(j in seq(from = 1, to = 2, by = 0.5)) {
-                        names <- "mousedata"
-                        Var1 <- noquote(paste0(names,"@meta.data$RNA_snn_res.",i))
-                        Var2 <- noquote(paste0(names,"@meta.data$RNA_snn_res.",j))
-                        ARI_tmp<- compare(Var1, Var2, method = "adjusted.rand")
-                        ARI <- rbind(ARI_tmp)
-                        }
-                }
-        ARI <- max(ARI)
-        print(ARI)
-        return(ARI)
-        return(seurobj)
-}
-
