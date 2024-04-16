@@ -1,3 +1,12 @@
+## Quality Control
+
+getSeuratObject <- function(seurobj, 
+        object.data <- Read10X(data.dir = paste("/home/bryanl/scratch/PradoData", path, "filtered_feature_bc_matrix", sep = "/"))
+object <- CreateSeuratObject(counts = object.data, project = paste(object, sep ="") , min.cells = 3, min.features = 200)
+
+getQC <- function(seurobj, object1, path) {
+        
+
 ## Adjusted Rand Index
 
 getARI <- function(seurobj, sequence = 0.25, start.res = 0.25, end.res = 2) {
