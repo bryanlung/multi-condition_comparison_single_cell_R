@@ -3,6 +3,9 @@
 getAllSeuratObject <- function(files) {
         if (grepl("gz$", files$files) == T) {
                 read.delim(files$files, row.names = 1)
+        }
+        if (grepl("h5$", files$files) | grepl("filtered_feature_bc_matrix$", files$files) == T) {
+                
         object.data <- Read10X(data.dir = files$files
                 paste("/home/bryanl/scratch/PradoData", path, 
                 "filtered_feature_bc_matrix", sep = "/"))
