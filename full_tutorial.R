@@ -11,10 +11,19 @@ library(M3Drop)
 library(cluster)
 library(igraph)
 library(edgeR)
-library("TxDb.Hsapiens.UCSC.hg19.knownGene")
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
 library(org.Hs.eg.db)
 library(gprofiler2)
 library(goseq)
 library(CellChat)
+
+## Reading in Data
+
+files <- list.files(path = "your_path", recursive = F, full.names= T)
+files <- as.data.frame(files)
+
+# Name Your Conditions/Samples
+
+
 
 ## Quality Control 
