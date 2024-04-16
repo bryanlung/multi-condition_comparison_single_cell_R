@@ -1,8 +1,10 @@
 ## Quality Control
 
-getSeuratObject <- function(seurobj, 
-        object.data <- Read10X(data.dir = paste("/home/bryanl/scratch/PradoData", path, "filtered_feature_bc_matrix", sep = "/"))
-object <- CreateSeuratObject(counts = object.data, project = paste(object, sep ="") , min.cells = 3, min.features = 200)
+getAllSeuratObject <- function(files) {
+        if (files$files 
+        object.data <- Read10X(data.dir = files$files
+                paste("/home/bryanl/scratch/PradoData", path, 
+                "filtered_feature_bc_matrix", sep = "/"))
 
 getQC <- function(seurobj, object1, path, species = "mmusculus") {
         if (species == "mmusculus") {
