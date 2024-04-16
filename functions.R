@@ -36,11 +36,18 @@ getSimpson <- function(seurobj, samples, resolution) {
         simpson <- round(simpson_index(seurobj@meta.data[, samples],
                 seurobj@meta.data$seurat_clusters), digits=2)
         b_loc <- barplot(cluster_comp/ncol(seurobj),
-                col=RColorBrewer::brewer.pal(nrow(cluster_comp), "Set3"),
-                text(x=b_loc, y=colSums(cluster_comp/ncol(seurobj)),
-                labels=simpson, pos=3),legend("topright",
-                c(paste("Avg. Simpson =", round(mean(simpson), digits=2)),
-                paste("Max. Simpson =", max(simpson)) ), bty="n"))
+                 col=RColorBrewer::brewer.pal(nrow(cluster_comp), "Set3"),
+                 xlab = "Clusters")
+                 text(x=b_loc, y=colSums(cluster_comp/ncol(seurobj)),
+                 labels=simpson, pos=3, cex = 0.7)
+                 legend("topright",
+                 c(paste("Average Simpson =", round(mean(simpson), digits=2)),
+                 paste("Maximum Simpson =", max(simpson))), bty="n")
+        if (round(mean(simpson) > 0.7)) {
+                print("Integration is not recommended")
+        } else {
+                print("Integration is recommended")
+        }
         return(b_loc)
 }
 
