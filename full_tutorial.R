@@ -20,11 +20,12 @@ library(CellChat)
 ## Preparing Files
 
 files <- list.files(path = "your_path", recursive = F, full.name = T)
+files <- list.files(path = "/home/bryanl/scratch/MBI4850G/finalproject",recursive = F, full.name = T)
 files <- as.data.frame(files)
 
 ## Name Your Conditions/Samples 
 
-files$"Conditions/Samples" <- c("your_conditions/samples")
+files$ConditionNames <- c("your_conditions_names")
 
 ## Creating a Seurat Object
 
