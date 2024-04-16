@@ -54,24 +54,34 @@ getSimpson <- function(seurobj, samples, resolution) {
                 tab <- t(t(tab)/colSums(tab))
                 return(colSums(tab^2))
         }
+
+        simpson_index_optimal <- function(samples) {
+        tab <- table(samples)
+        tab <- tab/sum(tab)
+        return(sum(tab^2))
+        }
+
         cluster_comp <- table(seurobj@meta.data[, samples],
                 seurobj@meta.data[, (paste0("RNA_snn_res.",resolution))])
         simpson <- round(simpson_index(seurobj@meta.data[, samples],
                 seurobj@meta.data$seurat_clusters), digits=2)
+        simpson.optimal <- round(simpson_index_optimal(
+                seurobj@meta.data[, samples]), digits=2)
+                print(simpson.optimal)
         b_loc <- barplot(cluster_comp/ncol(seurobj),
                  col=RColorBrewer::brewer.pal(nrow(cluster_comp), "Set3"),
-                 xlab = "Clusters")
+                 xlab = "Clusters", ylab = "Proportion")
                  text(x=b_loc, y=colSums(cluster_comp/ncol(seurobj)),
                  labels=simpson, pos=3, cex = 0.7)
                  legend("topright",
-                 c(paste("Average Simpson =", round(mean(simpson), digits=2)),
+                 c(paste("Expected Simpson =", simpson.optimal),
+                 paste("Average Simpson =", round(mean(simpson), digits=2)),
                  paste("Maximum Simpson =", max(simpson))), bty="n")
-        if (round(mean(simpson) > 0.7)) {
+        if (round(mean(simpson) > 2* simpson.optimal)) {
                 print("Integration is not recommended")
         } else {
                 print("Integration is recommended")
         }
-        return(b_loc)
 }
 
 ## Pseudobulk Expression Matrix
