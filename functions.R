@@ -43,3 +43,64 @@ getSimpson <- function(seurobj, samples, resolution) {
                 paste("Max. Simpson =", max(simpson)) ), bty="n"))
         return(b_loc)
 }
+
+## Pseudobulk Expression Matrix
+
+group_rowmeans <- function(MAT, group_labs, type=c("mean","sum")) {
+        d <- split(seq(ncol(MAT)), factor(group_labs));
+        if (type[1] == "mean") {
+                mus <- sapply(d, function(group) my_rowMeans(MAT[,group]))
+        } else {
+                mus <- sapply(d, function(group) my_rowSums(MAT[,group]))
+        }
+        return(mus);
+}
+
+my_rowSums <- function(x) {
+        if (!is.null(ncol(x))) {
+                if (ncol(x) > 1) {
+                        return(Matrix::rowSums(x))
+                }
+        }
+        return(x);
+}
+
+get_pseudobulk <- function(mat, clusters, donors, nexclude=10) {
+          tab <- table(clusters, donors)
+          exclude = tab < nexclude & tab > 0
+          exclude <- which(exclude, arr.ind=T)
+
+          tmp <- paste(clusters, donors, sep="_")
+          exclude_tmp <- paste(rownames(tab)[exclude[,1]], colnames(tab)[exclude[,2]], sep="_")
+          remove <- tmp %in% exclude_tmp
+          mat <- mat[,!remove]
+          clusters <- factor(clusters[!remove])
+          donors <- factor(donors[!remove])
+          c <- split(seq(ncol(mat)), clusters);
+          donor_freqs <- table(donors)/length(donors)
+          # avg expression per donor in this cluster
+          clust_expr <- sapply(c, function(clust) {
+                d_expr <- group_rowmeans(mat[,clust], donors[clust], type="sum");
+                if(is.null(dim(d_expr))) {
+                        l <- sapply(d_expr, length)
+                        keep <- which(l == nrow(mat))
+                        d_expr <- matrix(d_expr[[keep]], ncol=length(keep), byrow=FALSE);
+                        rownames(d_expr) <- rownames(mat);
+                        colnames(d_expr) <- paste(clusters[clust[1]], levels(donors)[keep], sep="_")
+                } else {
+                        colnames(d_expr) <- paste(clusters[clust[1]], colnames(d_expr), sep="_")
+                }
+                return(d_expr);
+          })
+          out <- clust_expr[[1]];
+          for (i in 2:length(clust_expr)) {
+                c_names <- c(colnames(out), colnames(clust_expr[[i]]))
+                out <- cbind(out, clust_expr[[i]]);
+                if (is.null(dim(out))){
+                        out <- matrix(out, ncol=1)
+                        rownames(out) <- rownames(mat)
+                }
+                colnames(out) <- c_names
+         }
+         return(out)
+}
