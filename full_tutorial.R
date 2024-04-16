@@ -17,13 +17,18 @@ library(gprofiler2)
 library(goseq)
 library(CellChat)
 
-## Reading in Data
+## Preparing Files
 
-files <- list.files(path = "your_path", recursive = F, full.names= T)
+files <- list.files(path = "your_path", recursive = F)
 files <- as.data.frame(files)
 
-# Name Your Conditions/Samples
+## Name Your Conditions/Samples 
 
+files$"Conditions/Samples" <- c("your_conditions/samples")
+
+## Creating a Seurat Object
 
 
 ## Quality Control 
+
+
