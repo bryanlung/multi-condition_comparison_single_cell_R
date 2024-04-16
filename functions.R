@@ -4,8 +4,22 @@ getSeuratObject <- function(seurobj,
         object.data <- Read10X(data.dir = paste("/home/bryanl/scratch/PradoData", path, "filtered_feature_bc_matrix", sep = "/"))
 object <- CreateSeuratObject(counts = object.data, project = paste(object, sep ="") , min.cells = 3, min.features = 200)
 
-getQC <- function(seurobj, object1, path) {
+getQC <- function(seurobj, object1, path, species = "mmusculus") {
+        if (species == "mmusculus") {
+                selection <- "^mt-"
+        } else if (species == "hsapiens")
+                {
+                selection <- "^MT-"
+        } else (species)
+                {
+                selection <- "Please find the mitochondrial pattern associated with 
+                your species."
+        }
+                return(selection)
+        }
         
+        object[["percent.mt"]] <- PercentageFeatureSet(object, pattern = species)
+}       
 
 ## Adjusted Rand Index
 
