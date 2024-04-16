@@ -19,7 +19,7 @@ library(CellChat)
 
 ## Preparing Files
 
-files <- list.files(path = "your_path", recursive = F)
+files <- list.files(path = "your_path", recursive = F, full.name = T)
 files <- as.data.frame(files)
 
 ## Name Your Conditions/Samples 
