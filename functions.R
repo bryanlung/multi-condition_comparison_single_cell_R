@@ -1,7 +1,8 @@
 ## Quality Control
 
 getAllSeuratObject <- function(files) {
-        if (files$files 
+        if (grepl("gz$", files$files) == T) {
+                read.delim(files$files, row.names = 1)
         object.data <- Read10X(data.dir = files$files
                 paste("/home/bryanl/scratch/PradoData", path, 
                 "filtered_feature_bc_matrix", sep = "/"))
@@ -69,10 +70,11 @@ getSimpson <- function(seurobj, samples, resolution) {
                 seurobj@meta.data$seurat_clusters), digits=2)
         simpson.optimal <- round(simpson_index_optimal(
                 seurobj@meta.data[, samples]), digits=2)
-                print(simpson.optimal)
+        Var1 <- max(colSums(cluster_comp/ncol(seurobj))) * 1.1
         b_loc <- barplot(cluster_comp/ncol(seurobj),
                  col=RColorBrewer::brewer.pal(nrow(cluster_comp), "Set3"),
-                 xlab = "Clusters", ylab = "Proportion")
+                 xlab = "Clusters", ylab = "Proportion",
+                 ylim = c(0, Var1))
                  text(x=b_loc, y=colSums(cluster_comp/ncol(seurobj)),
                  labels=simpson, pos=3, cex = 0.7)
                  legend("topright",
@@ -80,9 +82,9 @@ getSimpson <- function(seurobj, samples, resolution) {
                  paste("Average Simpson =", round(mean(simpson), digits=2)),
                  paste("Maximum Simpson =", max(simpson))), bty="n")
         if (round(mean(simpson) > 2* simpson.optimal)) {
-                print("Integration is not recommended")
-        } else {
                 print("Integration is recommended")
+        } else {
+                print("Integration is not recommended")
         }
 }
 
