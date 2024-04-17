@@ -4,7 +4,8 @@ getAllSeuratObject <- function(files) {
         output_list <- list()
         for (i in files$files) {
                 if (grepl("gz$", i) == T) {
-                        j <- files$Condition[files == i]
+                        j <- files$Condition[files == i] #Condition
+                        
                         output_list <- append(output_list, j)
                 }
         }
