@@ -6,11 +6,18 @@ getAllSeuratObject <- function(files) {
                 if (grepl("gz$", i) == T) {
                         j <- files$Condition[files == i]
                         output_list <- append(output_list, j)
-                        Var1 <- read.delim(paste(i, sep = "") , row.names = 1)
-                        output_list_tmp <- append(output_list, Var1)
-                        output_list <- list(output_list, output_list_tmp)
-                        print(output_list[[j]], "DONE")
-                        }}
+                }
+        }
+        for (i in files$files) {
+                if (grepl("gz$", i) == T) {
+                        j <- read.delim(paste(i, sep = "") , row.names = 1)
+                        k <- files$Condition[files == i]
+                        output_list[[k]] <- append(output_list, j)
+                }
+        }
+        output_list <- unlist(output_list)
+        print(output_list, "DONE")
+                }
                 
         }
         if (grepl("h5$", files$files) | grepl("filtered_feature_bc_matrix$", files$files) == T) {
