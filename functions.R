@@ -3,19 +3,39 @@
 getAllSeuratObject <- function(files) {
         output_list <- list()
         for (i in files$files) {
-                if (grepl("gz$", i) == T) {
-                        j <- files$Condition[files == i] #Condition
+                if (grepl(".gz$", i) == T) {
+                        j <- files$Condition[files == i] 
                         k <- read.delim(paste(i, sep = ""), row.names = 1)
+                        DatasetName <- paste(j,i, sep = "_")
+                        output_list[[DatasetName]] <- k
+                }
+                else if (grepl(".RDS$", i) == T) {
+                        j <- files$Condition[files == i] 
+                        k <- readRDS(paste(i, sep = ""))
+                        DatasetName <- paste(j,i, sep = "_")
+                        output_list[[DatasetName]] <- k
+                }
+                else if (grepl(".mtx$", i) | grepl("filtered_feature_bc_matrix$", i) == T) {
+                        j <- files$Condition[files == i] 
+                        k <- read10X(paste(i, sep = ""))
+                        DatasetName <- paste(j,i, sep = "_")
+                        output_list[[DatasetName]] <- k
+                }
+                else if (grepl(".csv$", i) | grepl(".csv.gz$", i) == T) {
+                        j <- files$Condition[files == i] 
+                        k <- read.csv(paste(i, sep = ""))
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
         }
         }
+        output_list[[DatasetName]] <- k
         print(output_list, "DONE")
                 }
                 
         }
         if (grepl("h5$", files$files) | grepl("filtered_feature_bc_matrix$", files$files) == T) {
+        print(output_list, "DONE")
                 
         object.data <- Read10X(data.dir = files$files
                 paste("/home/bryanl/scratch/PradoData", path, 
