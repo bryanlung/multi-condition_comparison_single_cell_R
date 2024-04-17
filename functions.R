@@ -5,18 +5,12 @@ getAllSeuratObject <- function(files) {
         for (i in files$files) {
                 if (grepl("gz$", i) == T) {
                         j <- files$Condition[files == i] #Condition
-                        
-                        output_list <- append(output_list, j)
+                        k <- read.delim(paste(i, sep = ""), row.names = 1)
+                        DatasetName <- paste(j,i, sep = "_")
+                        output_list[[DatasetName]] <- k
                 }
         }
-        for (i in files$files) {
-                if (grepl("gz$", i) == T) {
-                        j <- read.delim(paste(i, sep = "") , row.names = 1)
-                        k <- files$Condition[files == i]
-                        output_list[[k]] <- append(output_list, j)
-                }
         }
-        output_list <- unlist(output_list)
         print(output_list, "DONE")
                 }
                 
