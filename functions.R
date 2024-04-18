@@ -65,6 +65,9 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                 }
                 Sys.sleep(1/100)
         }
+        data_list <- list(output_list, Seurat_list)
+        return(data_list)
+}
 
         
         
