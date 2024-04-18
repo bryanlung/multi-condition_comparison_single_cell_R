@@ -1,14 +1,30 @@
 ## Quality Control
 
-getAllSeuratObject <- function(files) {
+getAllSeuratObject <- function(file.list) {
         output_list <- list()
+        pb <- progress_bar$new(
+        format = "  Generating Count Data [:bar] :percent in :elapsed",
+        total = length(files$files), clear = FALSE, width= 60)
         for (i in files$files) {
                 if (grepl(".gz$", i) == T) {
                         j <- files$Condition[files == i] 
                         k <- read.delim(paste(i, sep = ""), row.names = 1)
                         DatasetName <- paste(j,i, sep = "_")
-                        output_list[[DatasetName]] <- k
-                }
+                        output_list[[DatasetName]] <- k        
+                        }
+        pb$tick()
+        Sys.sleep(1/length(files$files))        
+        }
+                
+                          
+
+
+
+
+
+
+
+                
                 else if (grepl(".rds$", i) == T) {
                         j <- files$Condition[files == i] 
                         k <- readRDS(paste(i, sep = ""))
@@ -28,19 +44,7 @@ getAllSeuratObject <- function(files) {
                         output_list[[DatasetName]] <- k
                 }
         }
-        output_list[[DatasetName]] <- k
-        options(width = 80)
-        n <- 100
-        for (ii in 1:n) {
-                extra <- nchar('||100%')
-                width <- options()$width
-                step <- round(ii / n * (width - extra))
-                text <- sprintf('|%s%s|% 3s%%', strrep('=', step),
-                        strrep(' ', width - step - extra), round(ii / n * 100))
-          cat(text)
-          Sys.sleep(0.05)
-          cat(if (ii == n) '\n' else '\014')
-        }
+        
 }
                 
                 
