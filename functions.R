@@ -47,17 +47,19 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
         split_DatasetName <- strsplit(names(output_list), "_")
         Condition <- sapply(split_DatasetName, function(x){x[[1]]})
         Sample.Ident <- sapply(split_DatasetName, function(x){paste(x[c(2)],
-                collapse= "_")})
+               collapse= "_")})
         pb1 <- progress_bar$new(
                 format = "  Creating Your Seurat Object [:bar] :percent in :elapsed",
                 total = length(files$files), clear = FALSE, width= 60)
         for (i in output_list) {
-                if (grepl(".txt.gz$", names(output_list) == T)) { 
-                j <- CreateSeuratObject(counts = i, project = 
-                             names(output_list)[i] , min.cells = 200, 
-                             min \.features = 3, meta.data = NULL)
+                if (grepl(".txt.gz$", i) == T) {
+                n = 1
+                j = 1 + n          
+                k <- CreateSeuratObject(counts = i, project = 
+                             Sample.Ident[j], min.cells = 200, 
+                             min.features = 3, meta.data = NULL)
                 print(j)
-        }
+        }}
         
                 
                           
