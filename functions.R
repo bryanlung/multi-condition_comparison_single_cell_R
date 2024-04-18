@@ -53,17 +53,20 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                 format = "  Creating Your Seurat Object [:bar] :percent in :elapsed",
                 total = length(files$files), clear = FALSE, width= 60)
         for (i in seq(from = 1, to = length(files$files), by = 1)) {
+                pb1$tick()
                 j = i
-                if (grepl(".RDS$", names(output_list)[j]) || 
-                            grepl(".rds$", names(output_list)[j]) == F) {
+                if (class(output_list[[i]]) != "SeuratObject") {
                         j = i         
                         k <- CreateSeuratObject(counts = output_list[i], project = 
-                                Sample.Ident[j], min.cells = 200, 
-                                min.features = 3, meta.data = NULL)
-                        SeuratObjectName <- paste(names(output_list)[j], "SeuratObject", "_")
+                                Sample.Ident[j], min.cells = min.cells, 
+                                min.features = min.features, meta.data = meta.data)
+                        SeuratObjectName <- paste(names(output_list)[j], "SeuratObject", sep = "_")
                         Seurat_list[[SeuratObjectName]] <- k
                 }
+                Sys.sleep(1/100)
         }
+
+        
         
                 
                           
