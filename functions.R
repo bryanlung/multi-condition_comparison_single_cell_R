@@ -1,8 +1,5 @@
 ## Data Manipulation
 
-checkData <- function(files) {
-        }
-
 getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                               meta.data = NULL) {
         output_list <- list()
@@ -13,7 +10,8 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                 pb$tick()
                 if (grepl("txt.gz$", i) | grepl("txt.gz$", i) == T) {
                         j <- files$Condition[files == i] 
-                        k <- as.Matrix(read.delim(paste(i, sep = ""), row.names = 1))
+                        k <- read.delim(paste(i, sep = ""), row.names = 1)
+                        k <- as.sparse(k)
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k        
                         }  
@@ -25,32 +23,41 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                 }
                 else if (grepl(".mtx$", i) | grepl("filtered_feature_bc_matrix$", i) == T) {
                         j <- files$Condition[files == i] 
-                        k <- as.Matrix(read10X(paste(i, sep = "")))
+                        k <- read10X(paste(i, sep = ""))
+                        k <- as.sparse(k)
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
                 else if (grepl(".csv$", i) | grepl(".csv.gz$", i) == T) {
                         j <- files$Condition[files == i] 
-                        k <- as.Matrix(read.csv(paste(i, sep = "")))
+                        k <- read.csv(paste(i, sep = ""))
+                        k <- as.sparse(k)
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
                 else if (grepl(".tsv$", i) | grepl(".tsv.gz$", i) == T) {
                         j <- files$Condition[files == i] 
-                        k <- as.Matrix(read.csv(paste(i, sep = "\t")))
+                        k <- read.csv(paste(i, sep = "\t"))
+                        k <- as.sparse(k)
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
                 Sys.sleep(1/100)
         }
         split_DatasetName <- strsplit(names(output_list), "_")
+        Condition <- sapply(split_DatasetName, function(x){x[[1]]})
+        Sample.Ident <- sapply(split_DatasetName, function(x){paste(x[c(2)],
+                collapse= "_")})
         pb1 <- progress_bar$new(
                 format = "  Creating Your Seurat Object [:bar] :percent in :elapsed",
                 total = length(files$files), clear = FALSE, width= 60)
+        
         for (i in output_list) {
+                if (grepl(".txt.gz$", names(output_list) == T)) { 
                 j <- CreateSeuratObject(counts = i, project = 
-                             paste(object, sep ="") , min.cells = min.cells, 
-                             min.features = min.features)
+                             names(output_list)[i] , min.cells = 200, 
+                             min.features = 3, meta.data = NULL)
+                print(j)
         }
         
                 
