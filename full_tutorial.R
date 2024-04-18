@@ -31,6 +31,8 @@ files$ConditionNames <- c("your_conditions_names")
 
 ## Creating a Seurat Object
 
+YourVariable <- getAllSeuratObject(files)
+YourVariable <- unlist(YourVariable)
 
 ## Quality Control 
 
