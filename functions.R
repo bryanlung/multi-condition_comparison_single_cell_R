@@ -39,13 +39,14 @@ getAllSeuratObject <- function(files.list, min.cells = 3, min.features = 200) {
                 }
                 Sys.sleep(1/100)
         }
+        split_DatasetName <- strsplit(names(output_list), "_")
         pb1 <- progress_bar$new(
                 format = "  Creating Your Seurat Object [:bar] :percent in :elapsed",
                 total = length(files$files), clear = FALSE, width= 60)
         for (i in output_list) {
-                CreateSeuratObject(counts = i, project = 
-                        paste(object, sep ="") , min.cells = min.cells, 
-                        min.features = min.features)
+                j <- CreateSeuratObject(counts = i, project = 
+                             paste(object, sep ="") , min.cells = min.cells, 
+                             min.features = min.features)
         }
         
                 
