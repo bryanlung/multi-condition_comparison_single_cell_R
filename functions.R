@@ -67,12 +67,16 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                 }
                 Sys.sleep(1/100)
         }
-        data_list <- list(output_list, Seurat_list)
+        data_list <- list(output_list = output_list, Seurat_list = Seurat_list)
         return(data_list)
 }
 
 SeuratMerge <- function(Seurat_list) {
-        
+        if (length(files$files) %% 2 == 0) {
+                for(i in 
+                } else {
+    print("Odd")
+  }
         
 getQC <- function(seurobj, object1, path, species = "mmusculus") {
         if (species == "mmusculus") {
