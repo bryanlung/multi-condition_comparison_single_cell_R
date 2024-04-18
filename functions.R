@@ -60,6 +60,8 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                         k <- CreateSeuratObject(counts = output_list[i], project = 
                                 Sample.Ident[j], min.cells = min.cells, 
                                 min.features = min.features, meta.data = meta.data)
+                        k@meta.data$Condition <- Condition[j]
+                        k@meta.data$Sample.Ident <- Sample.Ident[j]
                         SeuratObjectName <- paste(names(output_list)[j], "SeuratObject", sep = "_")
                         Seurat_list[[SeuratObjectName]] <- k
                 }
@@ -69,16 +71,9 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
         return(data_list)
 }
 
+SeuratMerge <- function(Seurat_list) {
         
         
-                
-                          
-
-
-
-
-
-
 getQC <- function(seurobj, object1, path, species = "mmusculus") {
         if (species == "mmusculus") {
                 selection <- "^mt-"
