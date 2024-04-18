@@ -1,31 +1,19 @@
 ## Quality Control
 
-getAllSeuratObject <- function(file.list) {
+getAllSeuratObject <- function(files.list, min.cells = 3, min.features = 200) {
         output_list <- list()
         pb <- progress_bar$new(
-        format = "  Generating Count Data [:bar] :percent in :elapsed",
-        total = length(files$files), clear = FALSE, width= 60)
+                format = "  Importing Your Data [:bar] :percent in :elapsed",
+                total = length(files$files), clear = FALSE, width= 60)
         for (i in files$files) {
+                pb$tick()
                 if (grepl(".gz$", i) == T) {
                         j <- files$Condition[files == i] 
                         k <- read.delim(paste(i, sep = ""), row.names = 1)
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k        
-                        }
-        pb$tick()
-        Sys.sleep(1/length(files$files))        
-        }
-                
-                          
-
-
-
-
-
-
-
-                
-                else if (grepl(".rds$", i) == T) {
+                        }  
+                else if (grepl(".rds$", i) | grepl(".RDS$", i) == T) {
                         j <- files$Condition[files == i] 
                         k <- readRDS(paste(i, sep = ""))
                         DatasetName <- paste(j,i, sep = "_")
@@ -43,18 +31,30 @@ getAllSeuratObject <- function(file.list) {
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
+                else if (grepl(".tsv$", i) | grepl(".tsv.gz$", i) == T) {
+                        j <- files$Condition[files == i] 
+                        k <- read.csv(paste(i, sep = "\t"))
+                        DatasetName <- paste(j,i, sep = "_")
+                        output_list[[DatasetName]] <- k
+                }
+                Sys.sleep(1/100)
+        }
+        pb1 <- progress_bar$new(
+                format = "  Creating Your Seurat Object [:bar] :percent in :elapsed",
+                total = length(files$files), clear = FALSE, width= 60)
+        for (i in output_list) {
+                CreateSeuratObject(counts = i, project = 
+                        paste(object, sep ="") , min.cells = min.cells, 
+                        min.features = min.features)
         }
         
-}
                 
-                
-        }
-        if (grepl("h5$", files$files) | grepl("filtered_feature_bc_matrix$", files$files) == T) {
-        print(output_list, "DONE")
-                
-        object.data <- Read10X(data.dir = files$files
-                paste("/home/bryanl/scratch/PradoData", path, 
-                "filtered_feature_bc_matrix", sep = "/"))
+                          
+
+
+
+
+
 
 getQC <- function(seurobj, object1, path, species = "mmusculus") {
         if (species == "mmusculus") {
@@ -64,7 +64,7 @@ getQC <- function(seurobj, object1, path, species = "mmusculus") {
                 selection <- "^MT-"
         } else (species)
                 {
-                selection <- "Please find the mitochondrial pattern associated with 
+                selection <- "Mitochondiral pattern not found. Please find the mitochondrial pattern associated with 
                 your species."
         }
                 return(selection)
