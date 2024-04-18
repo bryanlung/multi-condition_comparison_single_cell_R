@@ -16,6 +16,7 @@ library(org.Hs.eg.db)
 library(gprofiler2)
 library(goseq)
 library(CellChat)
+library(progress)
 
 ## Preparing Files
 
