@@ -51,12 +51,11 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
         pb1 <- progress_bar$new(
                 format = "  Creating Your Seurat Object [:bar] :percent in :elapsed",
                 total = length(files$files), clear = FALSE, width= 60)
-        
         for (i in output_list) {
                 if (grepl(".txt.gz$", names(output_list) == T)) { 
                 j <- CreateSeuratObject(counts = i, project = 
                              names(output_list)[i] , min.cells = 200, 
-                             min.features = 3, meta.data = NULL)
+                             min \.features = 3, meta.data = NULL)
                 print(j)
         }
         
