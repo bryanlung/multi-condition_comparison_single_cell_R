@@ -9,7 +9,7 @@ getAllSeuratObject <- function(files) {
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
-                else if (grepl(".RDS$", i) == T) {
+                else if (grepl(".rds$", i) == T) {
                         j <- files$Condition[files == i] 
                         k <- readRDS(paste(i, sep = ""))
                         DatasetName <- paste(j,i, sep = "_")
@@ -28,10 +28,21 @@ getAllSeuratObject <- function(files) {
                         output_list[[DatasetName]] <- k
                 }
         }
-        }
         output_list[[DatasetName]] <- k
-        print(output_list, "DONE")
-                }
+        options(width = 80)
+        n <- 100
+        for (ii in 1:n) {
+                extra <- nchar('||100%')
+                width <- options()$width
+                step <- round(ii / n * (width - extra))
+                text <- sprintf('|%s%s|% 3s%%', strrep('=', step),
+                        strrep(' ', width - step - extra), round(ii / n * 100))
+          cat(text)
+          Sys.sleep(0.05)
+          cat(if (ii == n) '\n' else '\014')
+        }
+}
+                
                 
         }
         if (grepl("h5$", files$files) | grepl("filtered_feature_bc_matrix$", files$files) == T) {
