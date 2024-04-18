@@ -1,6 +1,6 @@
 ## Quality Control
 
-getAllSeuratObject <- function(files.list, min.cells = 3, min.features = 200) {
+getAllSeuratObject <- function(files, min.cells = 3, min.features = 200) {
         output_list <- list()
         pb <- progress_bar$new(
                 format = "  Importing Your Data [:bar] :percent in :elapsed",
