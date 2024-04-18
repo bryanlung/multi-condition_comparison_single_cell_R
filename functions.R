@@ -72,8 +72,16 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
 }
 
 SeuratMerge <- function(Seurat_list) {
+        samplenumber <- length(files$files)
+        n = samplenumber
+        for (n in 
+        n1 = n/2
+        n2 = n1/2
+        n
         if (length(files$files) %% 2 == 0) {
-                for(i in 
+                for (i in seq(from = 1, to = length(files$files), by = 1)) {
+                        
+                        Seurat_list[[i]]
                 } else {
     print("Odd")
   }
