@@ -1,15 +1,19 @@
-## Quality Control
+## Data Manipulation
 
-getAllSeuratObject <- function(files, min.cells = 3, min.features = 200) {
+checkData <- function(files) {
+        }
+
+getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
+                              meta.data = NULL) {
         output_list <- list()
         pb <- progress_bar$new(
                 format = "  Importing Your Data [:bar] :percent in :elapsed",
                 total = length(files$files), clear = FALSE, width= 60)
         for (i in files$files) {
                 pb$tick()
-                if (grepl(".gz$", i) == T) {
+                if (grepl("txt.gz$", i) | grepl("txt.gz$", i) == T) {
                         j <- files$Condition[files == i] 
-                        k <- read.delim(paste(i, sep = ""), row.names = 1)
+                        k <- as.Matrix(read.delim(paste(i, sep = ""), row.names = 1))
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k        
                         }  
@@ -21,19 +25,19 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200) {
                 }
                 else if (grepl(".mtx$", i) | grepl("filtered_feature_bc_matrix$", i) == T) {
                         j <- files$Condition[files == i] 
-                        k <- read10X(paste(i, sep = ""))
+                        k <- as.Matrix(read10X(paste(i, sep = "")))
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
                 else if (grepl(".csv$", i) | grepl(".csv.gz$", i) == T) {
                         j <- files$Condition[files == i] 
-                        k <- read.csv(paste(i, sep = ""))
+                        k <- as.Matrix(read.csv(paste(i, sep = "")))
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
                 else if (grepl(".tsv$", i) | grepl(".tsv.gz$", i) == T) {
                         j <- files$Condition[files == i] 
-                        k <- read.csv(paste(i, sep = "\t"))
+                        k <- as.Matrix(read.csv(paste(i, sep = "\t")))
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
