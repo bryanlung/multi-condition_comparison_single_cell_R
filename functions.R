@@ -79,7 +79,7 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
 
 SeuratMerge <- function(SeurObj) {
         Merged_list <- list()
-        GlobalMerged <- merge(SeurObj$Seurat_list[[1]],SeurObj$Seurat_list[[2]])
+        GlobalMerged <- merge(SeurObj$Seurat_list[[1]], SeurObj$Seurat_list[[2]])
         pb <- progress_bar$new(
         format = "  Merging Your Data [:bar] :percent in :elapsed \n",
         total = length(files$files) - 2, clear = FALSE, width= 60)
@@ -94,15 +94,24 @@ SeuratMerge <- function(SeurObj) {
         return(Merged_list)
 }
 
-## Working
-        if (length(files$files) %% 2 == 0) {
-                for (i in seq(from = 1, to = length(files$files), by = 1)) {
-                        
-                        Seurat_list[[i]]
-                } else {
-    print("Odd")
-  }
-## Working
+recSeuratMerge <- function(SeurObj) {
+        N <- length(SeurObj) + 0.1
+        if (N == 1.1) {
+                GlobalMerged <- SeurObj[[1]]
+                return(GlobalMerged)
+        }
+        if (N == 2.1) {
+                GlobalMerged <- merge(SeurObj[[1]], SeurObj[[2]])
+                return(GlobalMerged) 
+        } else { 
+                set1 = 1:floor(N/2)
+                set2 = ceiling(N/2):N
+                a = recSeuratMerge(SeurObj[set1]) 
+                b = recSeuratMerge(SeurObj[set2])
+                GlobalMerged <- merge(a,b)
+                return(GlobalMerged)
+        }
+}
                 
 getInitialQC <- function(seurobj, species = "mmusculus") {
         if (species == "mmusculus") {
