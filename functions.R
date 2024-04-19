@@ -79,10 +79,10 @@ SeuratMerge <- function(SeurObj) {
         total = length(files$files) - 2, clear = FALSE, width= 60)
         for(i in seq(from = 3, to = length(files$files), by = 1)) {
                 pb$tick()
-                j <- merge(GlobalMerged, SeurObj$Seurat_list[[i]])
-                Merged_list[[CompleteMerge]] <- j
+                GlobalMerged <- merge(GlobalMerged, SeurObj$Seurat_list[[i]])
                 Sys.sleep(1/100)
         }
+        Merged_list[[CompleteMerge]] <- GlobalMerged
         return(Merged_list)
 }
 
