@@ -68,6 +68,8 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                 Sys.sleep(1/100)
         }
         data_list <- list(output_list = output_list, Seurat_list = Seurat_list)
+        print(paste("Data importing complete.", length(files$files), 
+                    "Seurat Objects were created"))
         return(data_list)
 }
 
@@ -82,7 +84,9 @@ SeuratMerge <- function(SeurObj) {
                 GlobalMerged <- merge(GlobalMerged, SeurObj$Seurat_list[[i]])
                 Sys.sleep(1/100)
         }
+        CompleteMerge <- paste("CompleteMerge")
         Merged_list[[CompleteMerge]] <- GlobalMerged
+        print("Dataset merging is now completed.")
         return(Merged_list)
 }
 
