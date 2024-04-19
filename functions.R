@@ -93,22 +93,9 @@ SeuratMerge <- function(SeurObj) {
         print("Dataset merging is now completed.")
         return(Merged_list)
 }
-
-start.time <- Sys.time()
-D <- SeuratMerge(test)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-print(paste("SeuratMerge: ", time.taken))
-
-start.time <- Sys.time()
-E <- recSeuratMerge(test$Seurat_list)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-print(paste("recSeuratMerge: ", time.taken))
-
-
-
+      
 recSeuratMerge <- function(SeurObj) {
+        pb$tick()
         N <- length(SeurObj) + 0.1
         if (N == 1.1) {
                 GlobalMerged <- SeurObj[[1]]
@@ -124,9 +111,31 @@ recSeuratMerge <- function(SeurObj) {
                 b = recSeuratMerge(SeurObj[set2])
                 GlobalMerged <- merge(a,b)
                 return(GlobalMerged)
+        Sys.sleep(1/100)
         }
 }
-                
+
+SeuratMergeRec <- function(SeurObj) {
+        pb <- progress_bar$new(
+                format = "  Merging Your Data [:bar] :percent in :elapsed \n",
+                total = length(files$files), clear = FALSE, width= 60)
+        A <- recSeuratMerge(SeurObj)
+        print("Dataset merging is now completed.")
+        return(A)
+}
+
+start.time <- Sys.time()
+D <- SeuratMerge(test)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+print(paste("SeuratMerge: ", time.taken))
+
+start.time <- Sys.time()
+E <- recSeuratMerge(test$Seurat_list)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+print(paste("recSeuratMerge: ", time.taken))
+
 getInitialQC <- function(seurobj, species = "mmusculus") {
         if (species == "mmusculus") {
                 print("You have selected the mouse mitochondrial pattern.")
