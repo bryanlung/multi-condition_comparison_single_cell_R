@@ -42,6 +42,10 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
+                else {
+                        print("Your file type is currently not supported.")
+                  
+                }
                 Sys.sleep(1/100)
         }
         split_DatasetName <- strsplit(names(output_list), "_")
@@ -90,6 +94,7 @@ SeuratMerge <- function(SeurObj) {
         return(Merged_list)
 }
 
+## Working
         if (length(files$files) %% 2 == 0) {
                 for (i in seq(from = 1, to = length(files$files), by = 1)) {
                         
@@ -97,16 +102,19 @@ SeuratMerge <- function(SeurObj) {
                 } else {
     print("Odd")
   }
-        
+## Working
+                
 getQC <- function(seurobj, object1, path, species = "mmusculus") {
         if (species == "mmusculus") {
+                print("You have selected the mouse mitochondrial pattern.")
                 selection <- "^mt-"
         } else if (species == "hsapiens")
                 {
+                print("You have selected the human mitochondrial pattern.")
                 selection <- "^MT-"
         } else (species)
                 {
-                selection <- "Mitochondiral pattern not found. Please find the mitochondrial pattern associated with 
+                selection <- "Mitochondrial pattern not found. Please find the mitochondrial pattern associated with 
                 your species."
         }
                 return(selection)
