@@ -94,6 +94,19 @@ SeuratMerge <- function(SeurObj) {
         return(Merged_list)
 }
 
+start.time <- Sys.time()
+D <- SeuratMerge(test)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+print(paste("SeuratMerge: ", time.taken))
+
+start.time <- Sys.time()
+E <- recSeuratMerge(test$Seurat_list)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+print(paste("recSeuratMerge: ", time.taken))
+
+
 recSeuratMerge <- function(SeurObj) {
         N <- length(SeurObj) + 0.1
         if (N == 1.1) {
