@@ -42,10 +42,10 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
-                else (i) {
-                        stop("Your file type is currently not supported.")
+                #else (i) {
+                        #stop("Your file type is currently not supported.")
                   
-                }
+                #}
                 Sys.sleep(1/100)
         }
         split_DatasetName <- strsplit(names(output_list), "_")
@@ -81,7 +81,7 @@ SeuratMerge <- function(SeurObj) {
         Merged_list <- list()
         GlobalMerged <- merge(SeurObj$Seurat_list[[1]],SeurObj$Seurat_list[[2]])
         pb <- progress_bar$new(
-        format = "  Merging Your Data [:bar] :percent in :elapsed",
+        format = "  Merging Your Data [:bar] :percent in :elapsed \n",
         total = length(files$files) - 2, clear = FALSE, width= 60)
         for(i in seq(from = 3, to = length(files$files), by = 1)) {
                 pb$tick()
