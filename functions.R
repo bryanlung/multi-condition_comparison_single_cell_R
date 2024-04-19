@@ -73,7 +73,7 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
         }
         data_list <- list(output_list = output_list, Seurat_list = Seurat_list)
         print(paste("Data importing complete.", length(files$files), 
-                    "Seurat Objects were created"))
+                    "Seurat objects were created."))
         return(data_list)
 }
 
