@@ -42,8 +42,8 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
-                else {
-                        print("Your file type is currently not supported.")
+                else (i) {
+                        stop("Your file type is currently not supported.")
                   
                 }
                 Sys.sleep(1/100)
@@ -72,7 +72,7 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                 Sys.sleep(1/100)
         }
         data_list <- list(output_list = output_list, Seurat_list = Seurat_list)
-        print(paste("Data importing complete.", length(files$files), 
+        print(paste("Importing data is now completed.", length(files$files), 
                     "Seurat objects were created."))
         return(data_list)
 }
@@ -104,7 +104,7 @@ SeuratMerge <- function(SeurObj) {
   }
 ## Working
                 
-getQC <- function(seurobj, object1, path, species = "mmusculus") {
+getQC <- function(seurobj, species = "mmusculus") {
         if (species == "mmusculus") {
                 print("You have selected the mouse mitochondrial pattern.")
                 selection <- "^mt-"
@@ -114,14 +114,26 @@ getQC <- function(seurobj, object1, path, species = "mmusculus") {
                 selection <- "^MT-"
         } else (species)
                 {
-                selection <- "Mitochondrial pattern not found. Please find the mitochondrial pattern associated with 
-                your species."
+                stop("Mitochondrial pattern not found. Please find the mitochondrial pattern associated with 
+                your species.")
         }
-                return(selection)
-        }
-        
-        object[["percent.mt"]] <- PercentageFeatureSet(object, pattern = species)
-}       
+        seurobj[[1]][["percent.mt"]] <- PercentageFeatureSet(seurobj[[1]], pattern = "^mt-")
+        plot1 <- FeatureScatter(seurobj[[1]], feature1 = "nCount_RNA", 
+                feature2 = "percent.mt")
+        plot2 <- FeatureScatter(seurobj[[1]], feature1 = "nCount_RNA", 
+                feature2 = "nFeature_RNA")
+        print(plot1 + plot2)
+        plot <- plot1 + plot2 
+        print(VlnPlot(seurobj[[1]], features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), 
+                ncol = 3))
+        Violin Plot <- VlnPlot(seurobj[[1]], features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), 
+                ncol = 3)
+        seurat_output <- list(plot, Violin Plot)
+        print("Step 1 of quality control is completed. Please proceed to data subsetting.")
+        return(seurat_output)
+}
+                
+       
 
 ## Adjusted Rand Index
 
