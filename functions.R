@@ -104,7 +104,7 @@ SeuratMerge <- function(SeurObj) {
   }
 ## Working
                 
-getQC <- function(seurobj, species = "mmusculus") {
+getInitialQC <- function(seurobj, species = "mmusculus") {
         if (species == "mmusculus") {
                 print("You have selected the mouse mitochondrial pattern.")
                 selection <- "^mt-"
@@ -114,7 +114,7 @@ getQC <- function(seurobj, species = "mmusculus") {
                 selection <- "^MT-"
         } else (species)
                 {
-                stop("Mitochondrial pattern not found. Please find the mitochondrial pattern associated with 
+                print("Mitochondrial pattern not found. Please find the mitochondrial pattern associated with 
                 your species.")
         }
         seurobj[[1]][["percent.mt"]] <- PercentageFeatureSet(seurobj[[1]], pattern = "^mt-")
@@ -122,18 +122,15 @@ getQC <- function(seurobj, species = "mmusculus") {
                 feature2 = "percent.mt")
         plot2 <- FeatureScatter(seurobj[[1]], feature1 = "nCount_RNA", 
                 feature2 = "nFeature_RNA")
-        print(plot1 + plot2)
-        plot <- plot1 + plot2 
-        print(VlnPlot(seurobj[[1]], features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), 
+        plot <- print(plot1 + plot2) 
+        ViolinPlot <- print(VlnPlot(A[[1]], features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), 
                 ncol = 3))
-        Violin Plot <- VlnPlot(seurobj[[1]], features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), 
-                ncol = 3)
-        seurat_output <- list(plot, Violin Plot)
+        seurat_output <- list(plot, ViolinPlot)
         print("Step 1 of quality control is completed. Please proceed to data subsetting.")
         return(seurat_output)
 }
-                
-       
+          
+getSubsetThresholds <- function(seurobj,        
 
 ## Adjusted Rand Index
 
