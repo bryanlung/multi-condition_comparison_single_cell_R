@@ -123,13 +123,20 @@ getRecursiveMerge <- function(SeurObj) {
         return(A)
 }
 
+test_list <- list()
+for (i in 1:49) {
+        test <- getAllSeuratObject(
+
+  
 start.time <- Sys.time()
 SeuratMerge(test)
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken <- round(time.taken, digits=2)
 print(paste("SeuratMerge: ", time.taken))
-      
+
+
+
 start.time <- Sys.time()
 getRecursiveMerge(test$Seurat_list)
 end.time <- Sys.time()
