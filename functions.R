@@ -57,8 +57,8 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                 format = "  Creating Your Seurat Object [:bar] :percent in :elapsed",
                 total = length(files$files), clear = FALSE, width= 60)
         for (i in seq(from = 1, to = length(files$files), by = 1)) {
-                pb1$tick()
                 j = i
+                pb1$tick()
                 if (class(output_list[[i]]) != "SeuratObject") {
                         j = i         
                         k <- CreateSeuratObject(counts = output_list[i], project = 
@@ -79,23 +79,26 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
 
 SeuratMerge <- function(SeurObj) {
         Merged_list <- list()
-        GlobalMerged <- merge(SeurObj$Seurat_list[[1]], SeurObj$Seurat_list[[2]])
-        pb <- progress_bar$new(
-        format = "  Merging Your Data [:bar] :percent in :elapsed \n",
-        total = length(files$files) - 2, clear = FALSE, width= 60)
-        for(i in seq(from = 3, to = length(files$files), by = 1)) {
-                pb$tick()
-                GlobalMerged <- merge(GlobalMerged, SeurObj$Seurat_list[[i]])
-                Sys.sleep(1/100)
-        }
-        CompleteMerge <- paste("CompleteMerge")
-        Merged_list[[CompleteMerge]] <- GlobalMerged
+        N = length(SeurObj$Seurat_list)
+        if (N == 2) { 
+                GlobalMerged <- merge(SeurObj$Seurat_list[[1]], SeurObj$Seurat_list[[2]])
+                CompleteMerge <- paste("CompleteMerge")
+                Merged_list[[CompleteMerge]] <- GlobalMerged
+                print("Dataset merging is now completed.")
+                return(Merged_list)
+        } else if (N > 2) {
+                GlobalMerged <- merge(SeurObj$Seurat_list[[1]], SeurObj$Seurat_list[[2]])
+                for(i in seq(from = 3, to = length(SeurObj$Seurat_list), by = 1)) {
+                        GlobalMerged <- merge(GlobalMerged, SeurObj$Seurat_list[[i]])
+                        CompleteMerge <- paste("CompleteMerge")
+                        Merged_list[[CompleteMerge]] <- GlobalMerged
+                }
         print("Dataset merging is now completed.")
-        return(Merged_list)
+        return(Merged_list)        
+        }
 }
       
 recSeuratMerge <- function(SeurObj) {
-        pb$tick()
         N <- length(SeurObj) + 0.1
         if (N == 1.1) {
                 GlobalMerged <- SeurObj[[1]]
@@ -111,29 +114,27 @@ recSeuratMerge <- function(SeurObj) {
                 b = recSeuratMerge(SeurObj[set2])
                 GlobalMerged <- merge(a,b)
                 return(GlobalMerged)
-        Sys.sleep(1/100)
         }
 }
 
-SeuratMergeRec <- function(SeurObj) {
-        pb <- progress_bar$new(
-                format = "  Merging Your Data [:bar] :percent in :elapsed \n",
-                total = length(files$files), clear = FALSE, width= 60)
+getRecursiveMerge <- function(SeurObj) {
         A <- recSeuratMerge(SeurObj)
         print("Dataset merging is now completed.")
         return(A)
 }
 
 start.time <- Sys.time()
-D <- SeuratMerge(test)
+SeuratMerge(test)
 end.time <- Sys.time()
 time.taken <- end.time - start.time
+time.taken <- round(time.taken, digits=2)
 print(paste("SeuratMerge: ", time.taken))
-
+      
 start.time <- Sys.time()
-E <- recSeuratMerge(test$Seurat_list)
+getRecursiveMerge(test$Seurat_list)
 end.time <- Sys.time()
 time.taken <- end.time - start.time
+time.taken <- round(time.taken, digits=2)
 print(paste("recSeuratMerge: ", time.taken))
 
 getInitialQC <- function(seurobj, species = "mmusculus") {
