@@ -131,7 +131,7 @@ for (i in filenumber) {
         test_list[[name]] <- test
 }
 
-
+SeuratMerge <- as.matrix()
 
 start.time <- Sys.time()
 SeuratMerge(test1)
