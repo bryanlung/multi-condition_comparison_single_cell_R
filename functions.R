@@ -123,13 +123,18 @@ getRecursiveMerge <- function(SeurObj) {
         return(A)
 }
 
-test_list <- list()
-for (i in 1:49) {
-        test <- getAllSeuratObject(
+test_list <- list() 
+filenumber <- 2:50
+for (i in filenumber) {
+        test <- getAllSeuratObject(files[1:i,])
+        name <- paste("files",i, sep = "")
+        test_list[[name]] <- test
+}
 
-  
+
+
 start.time <- Sys.time()
-SeuratMerge(test)
+SeuratMerge(test1)
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken <- round(time.taken, digits=2)
@@ -138,7 +143,7 @@ print(paste("SeuratMerge: ", time.taken))
 
 
 start.time <- Sys.time()
-getRecursiveMerge(test$Seurat_list)
+getRecursiveMerge(test1$Seurat_list)
 end.time <- Sys.time()
 time.taken <- end.time - start.time
 time.taken <- round(time.taken, digits=2)
