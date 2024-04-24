@@ -123,40 +123,18 @@ getRecursiveMerge <- function(SeurObj) {
         return(A)
 }
 
-test_list <- list() 
-filenumber <- 2:50
-for (i in filenumber) {
-        test <- getAllSeuratObject(files[1:i,])
-        name <- paste("files",i, sep = "")
-        test_list[[name]] <- test
-}
-
-SeuratMerge <- as.matrix()
-
-start.time <- Sys.time()
-SeuratMerge(test1)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken <- round(time.taken, digits=2)
-print(paste("SeuratMerge: ", time.taken))
-
-
-
-start.time <- Sys.time()
-getRecursiveMerge(test1$Seurat_list)
-end.time <- Sys.time()
-time.taken <- end.time - start.time
-time.taken <- round(time.taken, digits=2)
-print(paste("recSeuratMerge: ", time.taken))
-
-getInitialQC <- function(seurobj, species = "mmusculus") {
-        if (species == "mmusculus") {
-                print("You have selected the mouse mitochondrial pattern.")
-                selection <- "^mt-"
-        } else if (species == "hsapiens")
-                {
-                print("You have selected the human mitochondrial pattern.")
-                selection <- "^MT-"
+getInitialQC <- function(seurobj, species = NULL) {
+        if (grep( "^mt-", rownames(seurobj), value == T) {
+                print("Mouse dataset detected.")
+                seurobj[[1]][["percent.mt"]] <- PercentageFeatureSet(seurobj[[1]], pattern = "^mt-")
+        }
+        else if (grep( "^mt.", rownames(seurobj), value == T) { 
+                print("Mouse dataset detected.")
+                seurobj[[1]][["percent.mt"]] <- PercentageFeatureSet(seurobj[[1]], pattern = "^mt.")
+        }
+        else if (grep( "^MT-", rownames(seurobj), value == T) { 
+                print("Human dataset detected.")
+                seurobj[[1]][["percent.mt"]] <- PercentageFeatureSet(seurobj[[1]], pattern = "^MT-")
         } else (species)
                 {
                 print("Mitochondrial pattern not found. Please find the mitochondrial pattern associated with 
