@@ -123,30 +123,28 @@ getRecursiveMerge <- function(SeurObj) {
         return(A)
 }
 
-getInitialQC <- function(seurobj, species = NULL) {
-        if (grep( "^mt-", rownames(seurobj), value == T) {
+getQCViolinPlot <- function(seurobj) {
+        if (length(grep( "^mt-", rownames(seurobj), value = T)) > 1) {
                 print("Mouse dataset detected.")
-                seurobj[[1]][["percent.mt"]] <- PercentageFeatureSet(seurobj[[1]], pattern = "^mt-")
+                seurobj[["percent.mt"]] <- PercentageFeatureSet(seurobj, pattern = "^mt")
         }
-        else if (grep( "^mt.", rownames(seurobj), value == T) { 
+        else if (length(grep( "^mt.", rownames(seurobj), value = T)) > 1) { 
                 print("Mouse dataset detected.")
-                seurobj[[1]][["percent.mt"]] <- PercentageFeatureSet(seurobj[[1]], pattern = "^mt.")
+                seurobj[["percent.mt"]] <- PercentageFeatureSet(seurobj, pattern = "^mt.")
         }
-        else if (grep( "^MT-", rownames(seurobj), value == T) { 
+        else if (length(grep( "^MT-", rownames(seurobj), value = T)) > 1) { 
                 print("Human dataset detected.")
-                seurobj[[1]][["percent.mt"]] <- PercentageFeatureSet(seurobj[[1]], pattern = "^MT-")
-        } else (species)
-                {
-                print("Mitochondrial pattern not found. Please find the mitochondrial pattern associated with 
+                seurobj[["percent.mt"]] <- PercentageFeatureSet(seurobj, pattern = "^MT-")
+        } else {
+                stop("Mitochondrial pattern not found. Please find the mitochondrial pattern associated with 
                 your species.")
         }
-        seurobj[[1]][["percent.mt"]] <- PercentageFeatureSet(seurobj[[1]], pattern = "^mt-")
-        plot1 <- FeatureScatter(seurobj[[1]], feature1 = "nCount_RNA", 
+        plot1 <- FeatureScatter(seurobj, feature1 = "nCount_RNA", 
                 feature2 = "percent.mt")
-        plot2 <- FeatureScatter(seurobj[[1]], feature1 = "nCount_RNA", 
+        plot2 <- FeatureScatter(seurobj, feature1 = "nCount_RNA", 
                 feature2 = "nFeature_RNA")
         plot <- print(plot1 + plot2) 
-        ViolinPlot <- print(VlnPlot(A[[1]], features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), 
+        ViolinPlot <- print(VlnPlot(seurobj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), 
                 ncol = 3))
         seurat_output <- list(plot, ViolinPlot)
         print("Step 1 of quality control is completed. Please proceed to data subsetting.")
