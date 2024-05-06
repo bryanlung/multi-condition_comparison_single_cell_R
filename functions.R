@@ -123,6 +123,8 @@ getRecursiveMerge <- function(SeurObj) {
         return(A)
 }
 
+## Quality Control
+
 getQCViolinPlot <- function(seurobj) {
         if (length(grep( "^mt-", rownames(seurobj), value = T)) > 1) {
                 print("Mouse dataset detected.")
@@ -146,12 +148,26 @@ getQCViolinPlot <- function(seurobj) {
         plot <- print(plot1 + plot2) 
         ViolinPlot <- print(VlnPlot(seurobj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), 
                 ncol = 3))
-        seurat_output <- list(plot, ViolinPlot)
+        seurat_output <- list(plot, ViolinPlot, seurobj)
         print("Step 1 of quality control is completed. Please proceed to data subsetting.")
         return(seurat_output)
 }
           
-getSubsetThresholds <- function(seurobj,        
+getSubsetThresholds <- function(seurobj, nFeature_RNA_bot, nFeature_RNA_top,
+                               nCount_RNA_bot, nCount_RNA_top, percent.mt.thresh,
+                               scale.factor = 10000) { 
+        seurobj[[3]] <- subset(seurobj[[3]], subset = nFeature_RNA > nFeature_RNA_bot 
+                & nFeature_RNA < nFeature_RNA_top & percent.mt < percent.mt.thresh & 
+                nCount_RNA > nCount_RNA_bot & nCount_RNA < nCount_RNA_top)
+        ViolinPlot <- print(VlnPlot(seurobj[[3]], features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3))
+        seurobj[[3]] <- NormalizeData(seurobj[[3]], normalization.method = "LogNormalize", scale.factor = scale.factor)
+        seurobj[[3]] <- NormalizeData(seurobj[[3]])
+        seurat_output <- list(ViolinPlot, seurobj[[3]])
+        return(seurat_output)
+}
+        object <- FindVariableFeatures(object, selection.method = "vst", nfeatures = 3000)
+}
+
 
 ## Adjusted Rand Index
 
