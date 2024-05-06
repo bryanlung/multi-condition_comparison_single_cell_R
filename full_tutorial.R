@@ -18,6 +18,7 @@ library(goseq)
 library(CellChat)
 library(progress)
 library(Matrix)
+library(scran)
 
 ## Preparing Files
 
