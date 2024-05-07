@@ -41,11 +41,9 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                         k <- as.sparse(k)
                         DatasetName <- paste(j,i, sep = "_")
                         output_list[[DatasetName]] <- k
+                } else {
+                        stop("Your file type is currently not supported.")
                 }
-                #else (i) {
-                        #stop("Your file type is currently not supported.")
-                  
-                #}
                 Sys.sleep(1/100)
         }
         split_DatasetName <- strsplit(names(output_list), "_")
@@ -149,24 +147,148 @@ getQCViolinPlot <- function(seurobj) {
         ViolinPlot <- print(VlnPlot(seurobj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), 
                 ncol = 3))
         seurat_output <- list(plot, ViolinPlot, seurobj)
+        
         print("Step 1 of quality control is completed. Please proceed to data subsetting.")
         return(seurat_output)
 }
           
 getSubsetThresholds <- function(seurobj, nFeature_RNA_bot, nFeature_RNA_top,
-                               nCount_RNA_bot, nCount_RNA_top, percent.mt.thresh,
-                               scale.factor = 10000) { 
-        seurobj[[3]] <- subset(seurobj[[3]], subset = nFeature_RNA > nFeature_RNA_bot 
-                & nFeature_RNA < nFeature_RNA_top & percent.mt < percent.mt.thresh & 
-                nCount_RNA > nCount_RNA_bot & nCount_RNA < nCount_RNA_top)
-        ViolinPlot <- print(VlnPlot(seurobj[[3]], features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3))
-        seurobj[[3]] <- NormalizeData(seurobj[[3]], normalization.method = "LogNormalize", scale.factor = scale.factor)
-        seurobj[[3]] <- NormalizeData(seurobj[[3]])
-        seurat_output <- list(ViolinPlot, seurobj[[3]])
-        return(seurat_output)
+        nCount_RNA_bot, nCount_RNA_top, percent.mt.thresh, scale_factor = 10000, 
+        n_features = 3000, normalization_method = c("FALSE","LogNormalize", "CLR", "RC"), 
+        selection_method = c("vst", "mean.var.plot", "dispersion") { 
+                seurobj[[3]] <- subset(seurobj[[3]], subset = nFeature_RNA > nFeature_RNA_bot 
+                        & nFeature_RNA < nFeature_RNA_top & percent.mt < percent.mt.thresh & 
+                        nCount_RNA > nCount_RNA_bot & nCount_RNA < nCount_RNA_top)
+                ViolinPlot <- print(VlnPlot(seurobj[[3]], features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3))
+                seurobj[[3]] <- SCTransform(seurobj[[3]], vars.to.regress = "percent.mt", verbose = FALSE)
+                if (normalization_method[2]) { 
+                        if (selection_method[1]) {
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]], normalization.method = "LogNormalize", 
+                                        scale.factor = scale_factor)
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]])
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "vst", nfeatures = n_features)
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
+                                plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
+                                plot <- print(plot1 + plot2)
+                                seurobj <- ScaleData(seurobj)
+                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
+                                return(seurat_output)
+                        }
+                        else if (selection_method[2]) {
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]], normalization.method = "LogNormalize", 
+                                        scale.factor = scale_factor)
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]])
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "mean.var.plot", nfeatures = n_features)  
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
+                                plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
+                                plot <- print(plot1 + plot2)
+                                seurobj <- ScaleData(seurobj)
+                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
+                                return(seurat_output)
+                       }
+                        else if (selection_method[3]) { 
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]], normalization.method = "LogNormalize", 
+                                        scale.factor = scale_factor)
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]])
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "dispersion", nfeatures = n_features)  
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
+                                plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
+                                plot <- print(plot1 + plot2)
+                                seurobj <- ScaleData(seurobj)
+                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
+                                return(seurat_output)
+                        }
+                }
+                else if (normalization_method[3]) { 
+                        if (selection_method[1]) {
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]], normalization.method = "CLR", 
+                                        scale.factor = scale_factor)
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]])
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "vst", nfeatures = n_features)
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
+                                plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
+                                plot <- print(plot1 + plot2)
+                                seurobj <- ScaleData(seurobj)
+                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
+                                return(seurat_output)
+                        }
+                        else if (selection_method[2]) {
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]], normalization.method = "CLR", 
+                                        scale.factor = scale_factor)
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]])
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "mean.var.plot", nfeatures = n_features)
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
+                                plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
+                                plot <- print(plot1 + plot2)
+                                seurobj <- ScaleData(seurobj)
+                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
+                                return(seurat_output)
+                       }
+                        else if (selection_method[3]) { 
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]], normalization.method = "CLR", 
+                                        scale.factor = scale_factor)
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]])
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "dispersion", nfeatures = n_features)
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
+                                plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
+                                plot <- print(plot1 + plot2)
+                                seurobj <- ScaleData(seurobj)
+                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
+                                return(seurat_output)
+                        }
+                }
+                else if (normalization_method[4]) { 
+                        if (selection_method[1]) {
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]], normalization.method = "RC", 
+                                        scale.factor = scale_factor)
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]])
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "vst", nfeatures = n_features)
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
+                                plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
+                                plot <- print(plot1 + plot2)
+                                seurobj <- ScaleData(seurobj)
+                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
+                                return(seurat_output)
+                        }
+                        else if (selection_method[2]) {
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]], normalization.method = "RC", 
+                                        scale.factor = scale_factor)
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]])
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "mean.var.plot", nfeatures = n_features) 
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
+                                plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
+                                plot <- print(plot1 + plot2)
+                                seurobj <- ScaleData(seurobj)
+                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
+                                return(seurat_output)
+                       }
+                        else if (selection_method[3]) { 
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]], normalization.method = "RC", 
+                                        scale.factor = scale_factor)
+                                seurobj[[3]] <- NormalizeData(seurobj[[3]])
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "dispersion", nfeatures = n_features)
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
+                                plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
+                                plot <- print(plot1 + plot2)
+                                seurobj <- ScaleData(seurobj)
+                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
+                                return(seurat_output)
+                        }
+                }
+                print("Normalization is now complete. Please proceed to clustering and doublet removal."
 }
-        object <- FindVariableFeatures(object, selection.method = "vst", nfeatures = 3000)
-}
+                                
+                                
+
 
 
 ## Adjusted Rand Index
