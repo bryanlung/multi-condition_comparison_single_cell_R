@@ -279,10 +279,9 @@ getSubsetThresholds <- function(seurobj, nFeature_RNA_bot, nFeature_RNA_top,
                                 Var1 <- seurobj[[3]]@assays$SCT@SCTModel.list[[1]]@feature.attributes
                                 Var1$Genes <- rownames(Var1)
                                 plot <- print(ggplot(Var1, aes(gmean, residual_variance, label = rownames(Var1))) + 
-                                        geom_point(color = "red") +
+                                        geom_point() +
                                         scale_y_log10() + scale_x_log10() + geom_text(aes(label = Genes), 
-                                        data= Var1[Var1$Genes %in% top20,], hjust=0, vjust=0) +
-                                        geom_text_repel(aes(label = Genes)) + 
+                                        data= Var1[Var1$Genes %in% top20,], hjust=0, vjust=0, color = "red") +
                                         theme(panel.grid.major = element_blank(),
                                         panel.grid.minor = element_blank(),
                                         panel.background = element_blank(),
@@ -294,12 +293,19 @@ getSubsetThresholds <- function(seurobj, nFeature_RNA_bot, nFeature_RNA_top,
                 }
 }
                     
-subtest <- getSubsetThresholds(test1,200,2000,200,5000,5, normalization_method= "FALSE", selection_method= "FALSE")                             
+##subtest <- getSubsetThresholds(test1,200,2000,200,5000,5, normalization_method= "RC", selection_method= "dispersion")                             
 
 ## Clustering and Doublet Removal
 
-
-
+getClustering <- function(seurobj, dim = 1:50) {
+        all.genes <- rownames(seurobj)
+        seurobj <- ScaleData(seurobj, features = all.genes)
+        seurobj <- ScaleData(seurobj, vars.to.regress = "percent.mt")
+        seurobj <- RunPCA(seurobj, features = VariableFeatures(object = seurobj))
+        VizDimLoadings(seurobj, dims = 1:2, reduction = "pca")
+        DimPlot(seurobj, reduction = "pca")
+        seurobj <- FindNeighbors(seurobj, dims = dim)
+}
 ## Adjusted Rand Index
 
 getARI <- function(seurobj, sequence = 0.25, start.res = 0.25, end.res = 2) {
