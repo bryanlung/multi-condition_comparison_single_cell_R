@@ -18,7 +18,7 @@ library(goseq)
 library(CellChat)
 library(progress)
 library(Matrix)
-library(scran)
+library(glmGamPoi)
 
 ## Preparing Files
 
