@@ -117,7 +117,8 @@ recSeuratMerge <- function(SeurObj) {
 
 getRecursiveMerge <- function(SeurObj) {
         A <- recSeuratMerge(SeurObj)
-        print("Dataset merging is now completed.")
+        print(paste("Dataset merging is now completed.", length(files$files), 
+                "Seurat objects were merged."))
         return(A)
 }
 
@@ -155,7 +156,7 @@ getQCViolinPlot <- function(seurobj) {
 getSubsetThresholds <- function(seurobj, nFeature_RNA_bot, nFeature_RNA_top,
         nCount_RNA_bot, nCount_RNA_top, percent.mt.thresh, scale_factor = 10000, 
         n_features = 3000, normalization_method = c("FALSE","LogNormalize", "CLR", "RC"), 
-        selection_method = c("vst", "mean.var.plot", "dispersion") { 
+        selection_method = c("vst", "mean.var.plot", "dispersion")) { 
                 seurobj[[3]] <- subset(seurobj[[3]], subset = nFeature_RNA > nFeature_RNA_bot 
                         & nFeature_RNA < nFeature_RNA_top & percent.mt < percent.mt.thresh & 
                         nCount_RNA > nCount_RNA_bot & nCount_RNA < nCount_RNA_top)
@@ -284,7 +285,7 @@ getSubsetThresholds <- function(seurobj, nFeature_RNA_bot, nFeature_RNA_top,
                                 return(seurat_output)
                         }
                 }
-                print("Normalization is now complete. Please proceed to clustering and doublet removal."
+                print("Normalization is now complete. Please proceed to clustering and doublet removal.")
 }
                                 
                                 
