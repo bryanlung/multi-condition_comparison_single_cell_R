@@ -275,13 +275,28 @@ getSubsetThresholds <- function(seurobj, nFeature_RNA_bot, nFeature_RNA_top,
                 else if (normalization_method[1] == "FALSE") {
                         if (selection_method[1] == "FALSE") {
                                 seurobj[[3]] <- SCTransform(seurobj[[3]], vars.to.regress = "percent.mt", verbose = FALSE)
+                                print(top20 <- head(VariableFeatures(seurobj[[3]]), 20))
+                                Var1 <- seurobj[[3]]@assays$SCT@SCTModel.list[[1]]@feature.attributes
+                                Var1$Genes <- rownames(Var1)
+                                plot <- print(ggplot(Var1, aes(gmean, residual_variance, label = rownames(Var1))) + 
+                                        geom_point(color = "red") +
+                                        scale_y_log10() + scale_x_log10() + geom_text(aes(label = Genes), 
+                                        data= Var1[Var1$Genes %in% top20,], hjust=0, vjust=0) +
+                                        geom_text_repel(aes(label = Genes)) + 
+                                        theme(panel.grid.major = element_blank(),
+                                        panel.grid.minor = element_blank(),
+                                        panel.background = element_blank(),
+                                        axis.line = element_line(colour = "black")))
                                 print("Normalization is now complete. Please proceed to clustering and doublet removal.")
-                                return(seurobj[[3]])
+                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
+                                return(seurat_output)
                         }
                 }
 }
-                                
-##subtest <- getSubsetThresholds(test1,200,2000,200,5000,5, normalization_method= "LogNormalize", selection_method= "vst")                             
+                    
+subtest <- getSubsetThresholds(test1,200,2000,200,5000,5, normalization_method= "FALSE", selection_method= "FALSE")                             
+
+## Clustering and Doublet Removal
 
 
 
