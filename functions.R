@@ -59,7 +59,7 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                 pb1$tick()
                 if (class(output_list[[i]]) != "SeuratObject") {
                         j = i         
-                        k <- CreateSeuratObject(counts = output_list[i]), 
+                        k <- CreateSeuratObject(counts = output_list[i], 
                                 project = Sample.Ident[j], min.cells = min.cells, 
                                 min.features = min.features, meta.data = meta.data)
                         k@meta.data$Condition <- Condition[j]
