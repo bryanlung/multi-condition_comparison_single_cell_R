@@ -284,8 +284,12 @@ getPCs <- function(seurobj, dim = 1:21, num_replicate = 100,
                 seurobj[[3]] <- ScoreJackStraw(seurobj[[3]], dims = 1:20)
                 JackStrawPlot(seurobj[[3]], dims = 1:20)
                 Elbow <- print(ElbowPlot(seurobj[[3]]))
-                data <- seurobj[[2]]$data
-                print(ggplot(data, aes(dims, stdev)) + geom_point() + geom_smooth())
+                data <- Elbow$data
+                print(ggplot(data, aes(dims, stdev)) + geom_point() + geom_smooth(color = "red") +
+                        theme(panel.grid.major = element_blank(),
+                        panel.grid.minor = element_blank(),
+                        panel.background = element_blank(),
+                        axis.line = element_line(colour = "black")))
                 seurat_output <- list(Var1 ,Elbow, seurobj[[3]])
                 return(seurat_output)
         }
