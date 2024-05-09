@@ -141,12 +141,12 @@ getQCViolinPlot <- function(seurobj) {
                 your species.")
         }
         plot1 <- FeatureScatter(seurobj, feature1 = "nCount_RNA", 
-                feature2 = "percent.mt")
+                feature2 = "percent.mt", group.by = "Condition")
         plot2 <- FeatureScatter(seurobj, feature1 = "nCount_RNA", 
-                feature2 = "nFeature_RNA")
+                feature2 = "nFeature_RNA", group.by = "Condition")
         plot <- print(plot1 + plot2) 
         ViolinPlot <- print(VlnPlot(seurobj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), 
-                ncol = 3))
+                ncol = 3, group.by = "Condition"))
         seurat_output <- list(plot, ViolinPlot, seurobj)
         
         print("Step 1 of quality control is completed. Please proceed to data subsetting.")
@@ -160,7 +160,8 @@ getSubsetThresholds <- function(seurobj, nFeature_RNA_bot, nFeature_RNA_top,
                 seurobj[[3]] <- subset(seurobj[[3]], subset = nFeature_RNA > nFeature_RNA_bot 
                         & nFeature_RNA < nFeature_RNA_top & percent.mt < percent.mt.thresh & 
                         nCount_RNA > nCount_RNA_bot & nCount_RNA < nCount_RNA_top)
-                ViolinPlot <- print(VlnPlot(seurobj[[3]], features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3))
+                ViolinPlot <- print(VlnPlot(seurobj[[3]], features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3,
+                        group.by = "Condition"))
                 if (normalization_method[1] == "LogNormalize") { 
                         seurobj[[3]] <- NormalizeData(seurobj[[3]], normalization.method = "LogNormalize", 
                                 scale.factor = scale_factor)
@@ -256,19 +257,42 @@ getSubsetThresholds <- function(seurobj, nFeature_RNA_bot, nFeature_RNA_top,
                 }
 }
                     
-##subtest <- getSubsetThresholds(test1,200,2000,200,5000,5, normalization_method= "RC", selection_method= "dispersion")                             
+##subtest <- getSubsetThresholds(test1,200,2000,200,5000,5, normalization_method= "FAlSE", selection_method= "FALSE")                             
 
 ## Clustering and Doublet Removal  
 
-getClustering <- function(seurobj, dim = 1:50, JackStraw = c("FALSE","TRUE")) {
-        all.genes <- rownames(seurobj[[3]])
-        seurobj[[3]] <- ScaleData(seurobj[[3]], features = all.genes)
-        seurobj[[3]] <- ScaleData(seurobj[[3]], vars.to.regress = "percent.mt")
-        seurobj[[3]] <- RunPCA(seurobj[[3]], features = VariableFeatures(object = seurobj[[3]]))
-        print(VizDimLoadings(seurobj[[3]], dims = dim, reduction = "pca"))
-        print(DimPlot(seurobj[[3]], reduction = "pca", group.by = "Condition"))
-        seurobj[[3]] <- FindNeighbors(seurobj[[3]], dims = dim)
+getPCs <- function(seurobj, dim = 1:21, num_replicate = 100, 
+        JackStraw = c("FALSE","TRUE")) {
+        if (JackStraw[1] == "FALSE") { 
+                all.genes <- rownames(seurobj[[3]])
+                seurobj[[3]] <- ScaleData(seurobj[[3]], features = all.genes)
+                seurobj[[3]] <- ScaleData(seurobj[[3]], vars.to.regress = "percent.mt")
+                seurobj[[3]] <- RunPCA(seurobj[[3]], features = VariableFeatures(object = seurobj[[3]]))
+                Var1 <- print(DimPlot(seurobj[[3]], reduction = "pca", group.by = "Condition"))
+                Var2 <- print(DimHeatmap(seurobj[[3]], dims = dim, cells = 500, balanced = TRUE))
+                Elbow <- print(ElbowPlot(seurobj[[3]]))
+                seurat_output <- list(Var1, Var2, Elbow, seurobj[[3]])
+                return(seurat_output)
+        }
+        if(JackStraw[1] == "TRUE") { 
+                all.genes <- rownames(seurobj[[3]])
+                seurobj[[3]] <- ScaleData(seurobj[[3]], features = all.genes)
+                seurobj[[3]] <- ScaleData(seurobj[[3]], vars.to.regress = "percent.mt")
+                seurobj[[3]] <- RunPCA(seurobj[[3]], features = VariableFeatures(object = seurobj[[3]]))
+                Var1 <- print(DimHeatmap(seurobj[[3]], dims = dim, cells = 500, balanced = TRUE))
+                seurobj[[3]] <- JackStraw(seurobj[[3]], num.replicate = num_replicate)
+                seurobj[[3]] <- ScoreJackStraw(seurobj[[3]], dims = 1:20)
+                JackStrawPlot(seurobj[[3]], dims = 1:20)
+                Elbow <- print(ElbowPlot(seurobj[[3]]))
+                data <- seurobj[[2]]$data
+                print(ggplot(data, aes(dims, stdev)) + geom_point() + geom_smooth
+                seurat_output <- list(Var1 ,Elbow, seurobj[[3]])
+                return(seurat_output)
+        }
 }
+
+getClusters <- function(seurobj, dim, 
+seurobj[[3]] <- FindNeighbors(seurobj[[3]], dims = dim)
 
 ## Adjusted Rand Index
 
