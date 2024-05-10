@@ -261,8 +261,7 @@ getSubsetThresholds <- function(seurobj, nFeature_RNA_bot, nFeature_RNA_top,
 
 ## Clustering and Doublet Removal  
 
-getPCs <- function(seurobj, dim = 1:50, num_replicate = 100, 
-        JackStraw = c("FALSE","TRUE")) {
+getPCs <- function(seurobj, num_replicate = 100, JackStraw = c("FALSE","TRUE")) {
         if (JackStraw[1] == "FALSE") { 
                 all.genes <- rownames(seurobj[[3]])
                 seurobj[[3]] <- ScaleData(seurobj[[3]], features = all.genes)
@@ -288,7 +287,7 @@ getPCs <- function(seurobj, dim = 1:50, num_replicate = 100,
                         panel.grid.minor = element_blank(),
                         panel.background = element_blank(),
                         axis.line = element_line(colour = "black")))
-                seurat_output <- list(Var1, Elbow, Var2, seurobj[[3]], advisedPCs)
+                seurat_output <- list(Var1, Elbow, seurobj[[3]], Var2, advisedPCs)
                 print(paste(advisedPCs, "principal components are suggested for downstream analysis")) 
                 return(seurat_output)
         }
@@ -312,9 +311,9 @@ getPCs <- function(seurobj, dim = 1:50, num_replicate = 100,
         }
 }
 
-getClusters <- function(seurobj, dim = 1:advisedPCs, seurobj[[3]], sequence = 0.25, 
+getClusters <- function(seurobj, dim = advisedPCs, seurobj[[3]], sequence = 0.25, 
         start.res = 0.25, end.res = 2) {   
-        seurobj[[3]] <- FindNeighbors(seurobj[[3]], dims = dim)
+        seurobj[[3]] <- FindNeighbors(seurobj[[3]], dims = 1:dim)
         for (i in seq(from = start.res, to = end.res, by = sequence)) {
                 seurobj[[3]] <- FindClusters(seurobj[[3]], resolution = i)
         }               
@@ -333,11 +332,18 @@ getClusters <- function(seurobj, dim = 1:advisedPCs, seurobj[[3]], sequence = 0.
         names(ARI) <- names1
         Var4 <- names(ARI[which(max(ARI)== ARI)])
         Var4 <- as.numeric(noquote(sub("RNA_snn_res.", "", Var4)))
-        seurobj <- FindClusters(seurobj, resolution = Var4)
-        return(seurobj)
+        downsampled.obj <- seurobj[[3]][, sample(colnames(seurobj[[3]]), size = 3000, replace=F)]
+        dist.matrix <- dist(x = Embeddings(object = seurobj[[3]][["pca"]])[, 1:dim])
+        sil <- silhouette(as.numeric(as.character(seurobj[[3]]@meta.data$seurat_clusters)), dist=dist.matrix)
+        head(sil)
+        mean(sil[,3])
+        cluster_sil_scores <- aggregate(sil[,3], by=list(sil[,1]), mean)
+        cluster_sil_scores
+        seurobj[[3]] <- FindClusters(seurobj[[3]], resolution = Var4)
+        return(seurobj[[3]])
 }
 
-downsampled.obj <- seurobj[[3]][, sample(colnames(seurobj[[3]]), size = 3000, replace=F)]
+
 
 ## Simpson Index
 
