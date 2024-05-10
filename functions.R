@@ -261,7 +261,7 @@ getSubsetThresholds <- function(seurobj, nFeature_RNA_bot, nFeature_RNA_top,
 
 ## Clustering and Doublet Removal  
 
-getPCs <- function(seurobj, dim = 1:21, num_replicate = 100, 
+getPCs <- function(seurobj, dim = 1:50, num_replicate = 100, 
         JackStraw = c("FALSE","TRUE")) {
         if (JackStraw[1] == "FALSE") { 
                 all.genes <- rownames(seurobj[[3]])
@@ -269,9 +269,27 @@ getPCs <- function(seurobj, dim = 1:21, num_replicate = 100,
                 seurobj[[3]] <- ScaleData(seurobj[[3]], vars.to.regress = "percent.mt")
                 seurobj[[3]] <- RunPCA(seurobj[[3]], features = VariableFeatures(object = seurobj[[3]]))
                 Var1 <- print(DimPlot(seurobj[[3]], reduction = "pca", group.by = "Condition"))
-                Var2 <- print(DimHeatmap(seurobj[[3]], dims = dim, cells = 500, balanced = TRUE))
-                Elbow <- print(ElbowPlot(seurobj[[3]]))
-                seurat_output <- list(Var1, Var2, Elbow, seurobj[[3]])
+                Elbow <- print(ElbowPlot(seurobj[[3]], ndims = 50))
+                data <- Elbow$data
+                x <- data$dims
+                y <- data$stdev
+                reg <- lm(tail(y, 30) ~ tail(x, 30))
+                PCtable <- matrix(nrow = length(x), ncol = 1)
+                j <- 1
+                for (i in y) {
+                        tmp <- (i - (reg$coefficients[2]*j + reg$coefficients[1]))
+                        PCtable[j,] <- tmp
+                        j <- j + 1
+                }
+                advisedPCs <- which(PCtable < 0)[1] - 1
+                Var2 <- print(ggplot(data, aes(dims, stdev)) + geom_point() + geom_smooth(data = tail(data, 30), 
+                        method = "lm" ,color = "red",fullrange=TRUE) +
+                        theme(panel.grid.major = element_blank(),
+                        panel.grid.minor = element_blank(),
+                        panel.background = element_blank(),
+                        axis.line = element_line(colour = "black")))
+                seurat_output <- list(Var1, Elbow, Var2, seurobj[[3]], advisedPCs)
+                print(paste(advisedPCs, "principal components are suggested for downstream analysis")) 
                 return(seurat_output)
         }
         if(JackStraw[1] == "TRUE") { 
@@ -279,38 +297,34 @@ getPCs <- function(seurobj, dim = 1:21, num_replicate = 100,
                 seurobj[[3]] <- ScaleData(seurobj[[3]], features = all.genes)
                 seurobj[[3]] <- ScaleData(seurobj[[3]], vars.to.regress = "percent.mt")
                 seurobj[[3]] <- RunPCA(seurobj[[3]], features = VariableFeatures(object = seurobj[[3]]))
-                Var1 <- print(DimHeatmap(seurobj[[3]], dims = dim, cells = 500, balanced = TRUE))
                 seurobj[[3]] <- JackStraw(seurobj[[3]], num.replicate = num_replicate)
                 seurobj[[3]] <- ScoreJackStraw(seurobj[[3]], dims = 1:20)
                 JackStrawPlot(seurobj[[3]], dims = 1:20)
                 Elbow <- print(ElbowPlot(seurobj[[3]]))
                 data <- Elbow$data
-                print(ggplot(data, aes(dims, stdev)) + geom_point() + geom_smooth(color = "red") +
+                Var1 <- print(ggplot(data, aes(dims, stdev)) + geom_point() + geom_smooth(method = "lm" ,color = "red") +
                         theme(panel.grid.major = element_blank(),
                         panel.grid.minor = element_blank(),
                         panel.background = element_blank(),
                         axis.line = element_line(colour = "black")))
-                seurat_output <- list(Var1 ,Elbow, seurobj[[3]])
+                seurat_output <- list(Var1, Elbow, seurobj[[3]])
                 return(seurat_output)
         }
 }
 
-getClusters <- function(seurobj, dim, 
-seurobj[[3]] <- FindNeighbors(seurobj[[3]], dims = dim)
-
-## Adjusted Rand Index
-
-getARI <- function(seurobj, sequence = 0.25, start.res = 0.25, end.res = 2) {
+getClusters <- function(seurobj, dim = 1:advisedPCs, seurobj[[3]], sequence = 0.25, 
+        start.res = 0.25, end.res = 2) {   
+        seurobj[[3]] <- FindNeighbors(seurobj[[3]], dims = dim)
         for (i in seq(from = start.res, to = end.res, by = sequence)) {
-                seurobj <- FindClusters(seurobj, resolution = i)
-}               
+                seurobj[[3]] <- FindClusters(seurobj[[3]], resolution = i)
+        }               
         tmp <-  1
         ARI <- c()
         names1 <- c()
         for(i in seq(from = start.res, to = end.res - 0.25, by = sequence)) {
                 j = i + sequence
-                Var1 <- seurobj@meta.data[, paste0("RNA_snn_res.",i)]
-                Var2 <- seurobj@meta.data[, paste0("RNA_snn_res.",j)]
+                Var1 <- seurobj[[3]]@meta.data[, paste0("RNA_snn_res.",i)]
+                Var2 <- seurobj[[3]]@meta.data[, paste0("RNA_snn_res.",j)]
                 Var3 <- noquote(paste0("RNA_snn_res.",j))
                 ARI[tmp] <- compare(Var1, Var2, method = "adjusted.rand")
                 names1[tmp] <- Var3
@@ -322,6 +336,8 @@ getARI <- function(seurobj, sequence = 0.25, start.res = 0.25, end.res = 2) {
         seurobj <- FindClusters(seurobj, resolution = Var4)
         return(seurobj)
 }
+
+downsampled.obj <- seurobj[[3]][, sample(colnames(seurobj[[3]]), size = 3000, replace=F)]
 
 ## Simpson Index
 
