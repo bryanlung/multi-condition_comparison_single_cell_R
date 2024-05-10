@@ -311,7 +311,7 @@ getPCs <- function(seurobj, num_replicate = 100, JackStraw = c("FALSE","TRUE")) 
         }
 }
 
-getClusters <- function(seurobj, dim = advisedPCs, seurobj[[3]], sequence = 0.25, 
+getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25, 
         start.res = 0.25, end.res = 2) {   
         seurobj[[3]] <- FindNeighbors(seurobj[[3]], dims = 1:dim)
         for (i in seq(from = start.res, to = end.res, by = sequence)) {
@@ -320,7 +320,7 @@ getClusters <- function(seurobj, dim = advisedPCs, seurobj[[3]], sequence = 0.25
         tmp <-  1
         ARI <- c()
         names1 <- c()
-        for(i in seq(from = start.res, to = end.res - 0.25, by = sequence)) {
+        for(i in seq(from = start.res, to = end.res - sequence, by = sequence)) {
                 j = i + sequence
                 Var1 <- seurobj[[3]]@meta.data[, paste0("RNA_snn_res.",i)]
                 Var2 <- seurobj[[3]]@meta.data[, paste0("RNA_snn_res.",j)]
@@ -332,20 +332,38 @@ getClusters <- function(seurobj, dim = advisedPCs, seurobj[[3]], sequence = 0.25
         names(ARI) <- names1
         Var4 <- names(ARI[which(max(ARI)== ARI)])
         Var4 <- as.numeric(noquote(sub("RNA_snn_res.", "", Var4)))
-        downsampled.obj <- seurobj[[3]][, sample(colnames(seurobj[[3]]), size = 3000, replace=F)]
-        dist.matrix <- dist(x = Embeddings(object = seurobj[[3]][["pca"]])[, 1:dim])
-        sil <- silhouette(as.numeric(as.character(seurobj[[3]]@meta.data$seurat_clusters)), dist=dist.matrix)
-        head(sil)
-        mean(sil[,3])
+        Var5 <- Var4 - sequence
+        Var4 <- paste0("RNA_snn_res.", Var4)
+        Var5 <- paste0("RNA_snn_res.", Var5)
+        
+        nSample <- round(5000/length(unique(seurobj[[3]]@meta.data$seurat_clusters)))
+        TotalSampledCells <- list()
+        z = 1
+        for (i in 0:(length(unique(seurobj[[3]]@meta.data$seurat_clusters))-1)) {
+                getCol <- colnames(seurobj[[3]][, seurobj[[3]]@meta.data$seurat_clusters == i])
+                SampledCells <- sample(getCol, size = min(nSample, length(getCol)), replace = F)
+                TotalSampledCells[[z]] <- SampledCells
+                z <- z + 1
+        }
+        downsampled.obj <- seurobj[[3]][, unlist(TotalSampledCells)]
+        avg_cluster_sil_scores <- c()
+        Idents(downsampled.obj) <- downsampled.obj@meta.data[, Var4] 
+        dist.matrix <- dist(x = Embeddings(object = downsampled.obj[["pca"]])[, 1:26])
+        sil <- silhouette(as.numeric(as.character(downsampled.obj@meta.data$seurat_clusters)), dist=dist.matrix)
         cluster_sil_scores <- aggregate(sil[,3], by=list(sil[,1]), mean)
-        cluster_sil_scores
-        seurobj[[3]] <- FindClusters(seurobj[[3]], resolution = Var4)
+        avg_cluster_sil_scores[1] <- mean(cluster_sil_scores$x)
+        Idents(downsampled.obj) <- downsampled.obj@meta.data[, Var5] 
+        dist.matrix <- dist(x = Embeddings(object = downsampled.obj[["pca"]])[, 1:26])
+        sil <- silhouette(as.numeric(as.character(downsampled.obj@meta.data$seurat_clusters)), dist=dist.matrix)
+        cluster_sil_scores <- aggregate(sil[,3], by=list(sil[,1]), mean)
+        avg_cluster_sil_scores[2] <- mean(cluster_sil_scores$x)
         return(seurobj[[3]])
 }
 
 
+#Idents(seurobj) <- path
 
-## Simpson Index
+## Simpson Index with respect to each condition
 
 getSimpson <- function(seurobj, samples, resolution) {
         simpson_index <- function(sample, cluster) {
