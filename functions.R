@@ -288,7 +288,7 @@ getPCs <- function(seurobj, num_replicate = 100, JackStraw = c("FALSE","TRUE")) 
                         panel.background = element_blank(),
                         axis.line = element_line(colour = "black")))
                 seurat_output <- list(Var1, Elbow, seurobj[[3]], Var2, advisedPCs)
-                print(paste(advisedPCs, "principal components are suggested for downstream analysis")) 
+                print(paste(advisedPCs, "principal components are suggested for downstream analysis.")) 
                 return(seurat_output)
         }
         if(JackStraw[1] == "TRUE") { 
@@ -344,29 +344,62 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
                 Var3 <- noquote(paste0("RNA_snn_res.",j))
                 ARI[tmp] <- compare(Var1, Var2, method = "adjusted.rand")
                 names1[tmp] <- Var3
-                tmp <- tmp + 1 
                 Idents(downsampled.obj) <- downsampled.obj@meta.data[, paste0("RNA_snn_res.",j)]
-                
+                downsampled.obj@meta.data$seurat_clusters <- Idents(downsampled.obj)
+                dist.matrix <- dist(x = Embeddings(object = downsampled.obj[["pca"]])[, 1:dim])
+                sil <- silhouette(as.numeric(as.character(downsampled.obj@meta.data$seurat_clusters)), dist=dist.matrix)
+                cluster_sil_scores <- aggregate(sil[,3], by=list(sil[,1]), mean)    
+                avg_cluster_sil_scores[tmp] <- mean(cluster_sil_scores$x)
+                tmp <- tmp + 1 
         }       
         names(ARI) <- names1
-        Var4 <- names(ARI[which(max(ARI)== ARI)])
-        Var4 <- as.numeric(noquote(sub("RNA_snn_res.", "", Var4)))
-        
-        dist.matrix <- dist(x = Embeddings(object = downsampled.obj[["pca"]])[, 1:26])
-        sil <- silhouette(as.numeric(as.character(downsampled.obj@meta.data$seurat_clusters)), dist=dist.matrix)
-        cluster_sil_scores <- aggregate(sil[,3], by=list(sil[,1]), mean)
-        avg_cluster_sil_scores[1] <- mean(cluster_sil_scores$x)
-        Idents(downsampled.obj) <- downsampled.obj@meta.data[, Var5] 
-        dist.matrix <- dist(x = Embeddings(object = downsampled.obj[["pca"]])[, 1:26])
-        sil <- silhouette(as.numeric(as.character(downsampled.obj@meta.data$seurat_clusters)), dist=dist.matrix)
-        cluster_sil_scores <- aggregate(sil[,3], by=list(sil[,1]), mean)
-        avg_cluster_sil_scores[2] <- mean(cluster_sil_scores$x)
+        names(avg_cluster_sil_scores) <- names1
+        print("ARI")
+        print(ARI)
+        print("Silhouette Score")
+        print(avg_cluster_sil_scores)
+        Var4 <- ARI + avg_cluster_sil_scores
+        Var5 <- names(Var4[which(max(Var4)== Var4)])
+        Idents(seurobj[[3]]) <- seurobj[[3]]@meta.data[, Var5]
+        seurobj[[3]]@meta.data$seurat_clusters <- Idents(seurobj[[3]]) 
+        seurobj[[3]]@misc$suggested_res <- Var5
+        seurobj[[3]]@misc$ARIs <- ARI
+        seurobj[[3]]@misc$Silhouette_Scores <- avg_cluster_sil_scores
+        Var5 <- as.numeric(noquote(sub("RNA_snn_res.", "", Var5)))
+        print(paste("A resolution of", Var5, "was used for clustering."))
         return(seurobj[[3]])
 }
 
+## Doublet Removal
 
-#Idents(seurobj) <- path
+findDoublets <- function(seurobj, dim = advisedPCs) { 
+        for (i seurobj@meta.data$Condition) { 
+        type.freq <- table(seurobj@meta.data$seurat_clusters)/ncol(seurobj)
+        homotypic.prop <- sum(type.freq^2)
+        nEXP = 0.009*(ncol(seurobj)/1000)*(1-homotypic.prop)*ncol(seurobj)
+        print(nEXP)
+        pN <-0.25
+        PCs <- dim
+        sweep.out <- paramSweep_v3(seurobj, PCs=1:PCs)
+        sweep.stats <- summarizeSweep(sweep.out)
+        print(plot(sweep.stats[,2:3]))
+        print(plot(sweep.stats[,1:3]))
+        print((sweep.stats[,]))
+        print(sweep.stats[as.numeric(as.character(sweep.stats[,3])) > 0.88,])
+        maxBCreal <- print(data.frame(which(sweep.stats == max(sweep.stats$BCreal),arr.ind=TRUE)))
+        DoubletParameters <- print(sweep.stats[maxBCreal$row,])
+        pK = print(as.numeric(as.character(DoubletParameters$pK)))
+        pN = print(as.numeric(as.character(DoubletParameters$pN)))
+        object <- doubletFinder_v3(object, PCs=1:PCs, pN=pN, pK=pK, nExp=nEXP)
+        print(head(object@meta.data))
+        X <- paste("DF.classifications", pN, pK, nEXP, sep="_")
+        print(table(object@meta.data$seurat_clusters, object@meta.data[,X]))
+        object <- RunUMAP(object, dims=1:50)
+        print(DimPlot(object, reduction="umap", group.by=X))
+        object@meta.data$DFCLASSIFICATIONS <- object@meta.data[,X]
 
+
+                
 ## Simpson Index with respect to each condition
 
 getSimpson <- function(seurobj, samples, resolution) {
