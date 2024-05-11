@@ -323,7 +323,7 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
         nSample <- round(5000/length(unique(seurobj[[3]]@meta.data$seurat_clusters)))
         TotalSampledCells <- list()
         pb <- progress_bar$new(
-                format = "  Downsampling your data [:bar] :percent in :elapsed",
+                format = "  Downsampling your data for silhouette score calculation. [:bar] :percent in :elapsed",
                 total = length(unique(seurobj[[3]]@meta.data$seurat_clusters)), 
                         clear = FALSE, width= 60)
         for (i in 0:(length(unique(seurobj[[3]]@meta.data$seurat_clusters))-1)) {
