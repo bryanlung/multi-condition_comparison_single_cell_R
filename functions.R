@@ -125,7 +125,6 @@ getRecursiveMerge <- function(SeurObj) {
 ## Quality Control
 
 getQCViolinPlot <- function(seurobj, SavePlots = c("FALSE", "TRUE")) {
-        seurobj@meta.data$counts <- seurobj@assays$RNA$counts
         if (length(grep( "^mt-", rownames(seurobj), value = T)) > 1) {
                 print("Mouse dataset detected.")
                 seurobj[["percent.mt"]] <- PercentageFeatureSet(seurobj, pattern = "^mt")
