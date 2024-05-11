@@ -124,7 +124,8 @@ getRecursiveMerge <- function(SeurObj) {
 
 ## Quality Control
 
-getQCViolinPlot <- function(seurobj) {
+getQCViolinPlot <- function(seurobj, SavePlots = c("FALSE", "TRUE")) {
+        seurobj@meta.data$counts <- seurobj@assays$RNA$counts
         if (length(grep( "^mt-", rownames(seurobj), value = T)) > 1) {
                 print("Mouse dataset detected.")
                 seurobj[["percent.mt"]] <- PercentageFeatureSet(seurobj, pattern = "^mt")
@@ -147,100 +148,150 @@ getQCViolinPlot <- function(seurobj) {
         plot <- print(plot1 + plot2) 
         ViolinPlot <- print(VlnPlot(seurobj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), 
                 ncol = 3, group.by = "Condition"))
-        seurat_output <- list(plot, ViolinPlot, seurobj)
+        if (SavePlots[1] == "TRUE") { 
+                seurobj@misc$QCplots <- plot
+                seurobj@misc$QCViolinPlot <- ViolinPlot
+                print("Step 1 of quality control is completed. Please proceed to data subsetting.")
+                return(seurobj)
         
-        print("Step 1 of quality control is completed. Please proceed to data subsetting.")
-        return(seurat_output)
+        }
+        if (SavePlots[1] == "FALSE") { 
+                print("Step 1 of quality control is completed. Please proceed to data subsetting.")
+                return(seurobj)
+        }
 }
           
 getSubsetThresholds <- function(seurobj, nFeature_RNA_bot, nFeature_RNA_top,
         nCount_RNA_bot, nCount_RNA_top, percent.mt.thresh, scale_factor = 10000, 
         n_features = 3000, normalization_method = c("FALSE","LogNormalize", "CLR"), 
-        selection_method = c("FALSE","vst", "mean.var.plot", "dispersion")) { 
-                seurobj[[3]] <- subset(seurobj[[3]], subset = nFeature_RNA > nFeature_RNA_bot 
+        selection_method = c("FALSE","vst", "mean.var.plot", "dispersion"), 
+        SavePlots = c("FALSE", "TRUE")) { 
+                seurobj <- subset(seurobj, subset = nFeature_RNA > nFeature_RNA_bot 
                         & nFeature_RNA < nFeature_RNA_top & percent.mt < percent.mt.thresh & 
                         nCount_RNA > nCount_RNA_bot & nCount_RNA < nCount_RNA_top)
-                ViolinPlot <- print(VlnPlot(seurobj[[3]], features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3,
+                ViolinPlot <- print(VlnPlot(seurobj, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3,
                         group.by = "Condition"))
                 if (normalization_method[1] == "LogNormalize") { 
-                        seurobj[[3]] <- NormalizeData(seurobj[[3]], normalization.method = "LogNormalize", 
+                        seurobj <- NormalizeData(seurobj, normalization.method = "LogNormalize", 
                                 scale.factor = scale_factor)
                         if (selection_method[1] == "vst") {
-                                seurobj[[3]] <- FindVariableFeatures(seurobj[[3]], selection.method = "vst", nfeatures = n_features)
-                                print(top20 <- head(VariableFeatures(seurobj[[3]]), 20))
-                                plot1 <- VariableFeaturePlot(seurobj[[3]])
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "vst", nfeatures = n_features)
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
                                 plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
                                 plot <- print(plot1 + plot2)
-                                seurobj[[3]] <- ScaleData(seurobj[[3]])
-                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
-                                print("Normalization is now complete. Please proceed to clustering and doublet removal.")
-                                return(seurat_output)
+                                seurobj <- ScaleData(seurobj)
+                                if (SavePlots[1] == "TRUE") {
+                                        seurobj@misc$FinalViolinPlot <- ViolinPlot
+                                        seurobj@misc$HVGPlot <- plot
+                                        print("Normalization is now complete. Please proceed to clustering.")
+                                        return(seurobj)
+                                }
+                                if (SavePlots[1] == "FALSE") { 
+                                        print("Normalization is now complete. Please proceed to clustering.")
+                                        return(seurobj)
+                                }
                         }
                         else if (selection_method[1] == "mean.var.plot") {
-                                seurobj[[3]] <- FindVariableFeatures(seurobj[[3]], selection.method = "mean.var.plot", nfeatures = n_features)  
-                                print(top20 <- head(VariableFeatures(seurobj[[3]]), 20))
-                                plot1 <- VariableFeaturePlot(seurobj[[3]])
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "mean.var.plot", nfeatures = n_features)  
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
                                 plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
                                 plot <- print(plot1 + plot2)
-                                seurobj[[3]] <- ScaleData(seurobj[[3]])
-                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
-                                print("Normalization is now complete. Please proceed to clustering and doublet removal.")
-                                return(seurat_output)
+                                seurobj <- ScaleData(seurobj)
+                                if (SavePlots[1] == "TRUE") {
+                                        seurobj@misc$FinalViolinPlot <- ViolinPlot
+                                        seurobj@misc$HVGPlot <- plot
+                                        print("Normalization is now complete. Please proceed to clustering.")
+                                        return(seurobj)
+                                }
+                                if (SavePlots[1] == "FALSE") { 
+                                        print("Normalization is now complete. Please proceed to clustering.")
+                                        return(seurobj)
+                                }
                        }
-                        else if (selection_method[1] == "dispersion") { 
-                                seurobj[[3]] <- FindVariableFeatures(seurobj[[3]], selection.method = "dispersion", nfeatures = n_features)  
-                                print(top20 <- head(VariableFeatures(seurobj[[3]]), 20))
-                                plot1 <- VariableFeaturePlot(seurobj[[3]])
+                       else if (selection_method[1] == "dispersion") { 
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "dispersion", nfeatures = n_features)  
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
                                 plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
                                 plot <- print(plot1 + plot2)
-                                seurobj[[3]] <- ScaleData(seurobj[[3]])
-                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
-                                print("Normalization is now complete. Please proceed to clustering and doublet removal.")
-                                return(seurat_output)
+                                seurobj <- ScaleData(seurobj)
+                                if (SavePlots[1] == "TRUE") {
+                                        seurobj@misc$FinalViolinPlot <- ViolinPlot
+                                        seurobj@misc$HVGPlot <- plot
+                                        print("Normalization is now complete. Please proceed to clustering.")
+                                        return(seurobj)
+                                }
+                                if (SavePlots[1] == "FALSE") { 
+                                        print("Normalization is now complete. Please proceed to clustering.")
+                                        return(seurobj)
+                                }
                         }
                 }
                 else if (normalization_method[1] == "CLR") { 
-                        seurobj[[3]] <- NormalizeData(seurobj[[3]], normalization.method = "CLR", 
+                        seurobj <- NormalizeData(seurobj, normalization.method = "CLR", 
                                 scale.factor = scale_factor)
                         if (selection_method[1] == "vst") {
-                                seurobj[[3]] <- FindVariableFeatures(seurobj[[3]], selection.method = "vst", nfeatures = n_features)
-                                print(top20 <- head(VariableFeatures(seurobj[[3]]), 20))
-                                plot1 <- VariableFeaturePlot(seurobj[[3]])
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "vst", nfeatures = n_features)
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
                                 plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
                                 plot <- print(plot1 + plot2)
-                                seurobj[[3]] <- ScaleData(seurobj[[3]])
-                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
-                                print("Normalization is now complete. Please proceed to clustering and doublet removal.")
-                                return(seurat_output)
+                                seurobj <- ScaleData(seurobj)
+                                if (SavePlots[1] == "TRUE") {
+                                        seurobj@misc$FinalViolinPlot <- ViolinPlot
+                                        seurobj@misc$HVGPlot <- plot
+                                        print("Normalization is now complete. Please proceed to clustering.")
+                                        return(seurobj)
+                                }
+                                if (SavePlots[1] == "FALSE") { 
+                                        print("Normalization is now complete. Please proceed to clustering.")
+                                        return(seurobj)
+                                }
                         }
                         else if (selection_method[1] == "mean.var.plot") {
-                                seurobj[[3]] <- FindVariableFeatures(seurobj[[3]], selection.method = "mean.var.plot", nfeatures = n_features)
-                                print(top20 <- head(VariableFeatures(seurobj[[3]]), 20))
-                                plot1 <- VariableFeaturePlot(seurobj[[3]])
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "mean.var.plot", nfeatures = n_features)
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
                                 plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
                                 plot <- print(plot1 + plot2)
-                                seurobj[[3]] <- ScaleData(seurobj[[3]])
-                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
-                                print("Normalization is now complete. Please proceed to clustering and doublet removal.")
-                                return(seurat_output)
+                                seurobj <- ScaleData(seurobj)
+                                if (SavePlots[1] == "TRUE") {
+                                        seurobj@misc$FinalViolinPlot <- ViolinPlot
+                                        seurobj@misc$HVGPlot <- plot
+                                        print("Normalization is now complete. Please proceed to clustering.")
+                                        return(seurobj)
+                                }
+                                if (SavePlots[1] == "FALSE") { 
+                                        print("Normalization is now complete. Please proceed to clustering.")
+                                        return(seurobj)
+                                }
                        }
                         else if (selection_method[1] == "dispersion") { 
-                                seurobj[[3]] <- FindVariableFeatures(seurobj[[3]], selection.method = "dispersion", nfeatures = n_features)
-                                print(top20 <- head(VariableFeatures(seurobj[[3]]), 20))
-                                plot1 <- VariableFeaturePlot(seurobj[[3]])
+                                seurobj <- FindVariableFeatures(seurobj, selection.method = "dispersion", nfeatures = n_features)
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                plot1 <- VariableFeaturePlot(seurobj)
                                 plot2 <- LabelPoints(plot = plot1, points = top20, repel = TRUE)
                                 plot <- print(plot1 + plot2)
-                                seurobj[[3]] <- ScaleData(seurobj[[3]])
-                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
-                                print("Normalization is now complete. Please proceed to clustering and doublet removal.")
-                                return(seurat_output)
+                                seurobj <- ScaleData(seurobj)
+                                if (SavePlots[1] == "TRUE") {
+                                        seurobj@misc$FinalViolinPlot <- ViolinPlot
+                                        seurobj@misc$HVGPlot <- plot
+                                        print("Normalization is now complete. Please proceed to clustering.")
+                                        return(seurobj)
+                                }
+                                if (SavePlots[1] == "FALSE") { 
+                                        print("Normalization is now complete. Please proceed to clustering.")
+                                        return(seurobj)
+                                }
                         }
                 }
                 else if (normalization_method[1] == "FALSE") {
                         if (selection_method[1] == "FALSE") {
-                                seurobj[[3]] <- SCTransform(seurobj[[3]], vars.to.regress = "percent.mt", verbose = FALSE)
-                                print(top20 <- head(VariableFeatures(seurobj[[3]]), 20))
-                                Var1 <- seurobj[[3]]@assays$SCT@SCTModel.list[[1]]@feature.attributes
+                                seurobj <- SCTransform(seurobj, vars.to.regress = "percent.mt", verbose = FALSE)
+                                print(top20 <- head(VariableFeatures(seurobj), 20))
+                                Var1 <- seurobj@assays$SCT@SCTModel.list[[1]]@feature.attributes
                                 Var1$Genes <- rownames(Var1)
                                 plot <- print(ggplot(Var1, aes(gmean, residual_variance, label = rownames(Var1))) + 
                                         geom_point() +
@@ -250,101 +301,111 @@ getSubsetThresholds <- function(seurobj, nFeature_RNA_bot, nFeature_RNA_top,
                                         panel.grid.minor = element_blank(),
                                         panel.background = element_blank(),
                                         axis.line = element_line(colour = "black")))
-                                print("Normalization is now complete. Please proceed to clustering and doublet removal.")
-                                seurat_output <- list(ViolinPlot, plot, seurobj[[3]])
-                                return(seurat_output)
+                                if (SavePlots[1] == "TRUE") {
+                                        seurobj@misc$FinalViolinPlot <- ViolinPlot
+                                        seurobj@misc$HVGPlot <- plot
+                                        print("Normalization is now complete. Please proceed to clustering.")
+                                        return(seurobj)
+                                }
+                                if (SavePlots[1] == "FALSE") { 
+                                        print("Normalization is now complete. Please proceed to clustering.")
+                                        return(seurobj)
+                                }
                         }
                 }
 }
                     
-##subtest <- getSubsetThresholds(test1,200,2000,200,5000,5, normalization_method= "FAlSE", selection_method= "FALSE")                             
+##subtest <- getSubsetThresholds(test1,200,2000,200,5000,2, normalization_method= "FALSE", selection_method= "FALSE", SavePlots = "TRUE")                             
 
 ## Clustering and Doublet Removal  
 
-getPCs <- function(seurobj, num_replicate = 100, JackStraw = c("FALSE","TRUE")) {
-        if (JackStraw[1] == "FALSE") { 
-                all.genes <- rownames(seurobj[[3]])
-                seurobj[[3]] <- ScaleData(seurobj[[3]], features = all.genes)
-                seurobj[[3]] <- ScaleData(seurobj[[3]], vars.to.regress = "percent.mt")
-                seurobj[[3]] <- RunPCA(seurobj[[3]], features = VariableFeatures(object = seurobj[[3]]))
-                Var1 <- print(DimPlot(seurobj[[3]], reduction = "pca", group.by = "Condition"))
-                Elbow <- print(ElbowPlot(seurobj[[3]], ndims = 50))
-                data <- Elbow$data
-                x <- data$dims
-                y <- data$stdev
-                reg <- lm(tail(y, 30) ~ tail(x, 30))
-                PCtable <- matrix(nrow = length(x), ncol = 1)
-                j <- 1
-                for (i in y) {
-                        tmp <- (i - (reg$coefficients[2]*j + reg$coefficients[1]))
-                        PCtable[j,] <- tmp
-                        j <- j + 1
-                }
-                advisedPCs <- which(PCtable < 0)[1] - 1
-                Var2 <- print(ggplot(data, aes(dims, stdev)) + geom_point() + geom_smooth(data = tail(data, 30), 
-                        method = "lm" ,color = "red",fullrange=TRUE) +
-                        theme(panel.grid.major = element_blank(),
-                        panel.grid.minor = element_blank(),
-                        panel.background = element_blank(),
-                        axis.line = element_line(colour = "black")))
-                seurat_output <- list(Var1, Elbow, seurobj[[3]], Var2, advisedPCs)
-                print(paste(advisedPCs, "principal components are suggested for downstream analysis.")) 
-                return(seurat_output)
+getPCs <- function(seurobj, SavePlots = c("FALSE","TRUE")) {
+        all.genes <- rownames(seurobj)
+        seurobj <- ScaleData(seurobj, features = all.genes)
+        seurobj <- ScaleData(seurobj, vars.to.regress = "percent.mt")
+        seurobj <- RunPCA(seurobj, features = VariableFeatures(object = seurobj))
+        Var1 <- print(DimPlot(seurobj, reduction = "pca", group.by = "Condition"))
+        Elbow <- print(ElbowPlot(seurobj, ndims = 50))
+        data <- Elbow$data
+        x <- data$dims
+        y <- data$stdev
+        reg <- lm(tail(y, 30) ~ tail(x, 30))
+        PCtable <- matrix(nrow = length(x), ncol = 1)
+        j <- 1
+        for (i in y) {
+                tmp <- (i - (reg$coefficients[2]*j + reg$coefficients[1]))
+                PCtable[j,] <- tmp
+                j <- j + 1
         }
-        if(JackStraw[1] == "TRUE") { 
-                all.genes <- rownames(seurobj[[3]])
-                seurobj[[3]] <- ScaleData(seurobj[[3]], features = all.genes)
-                seurobj[[3]] <- ScaleData(seurobj[[3]], vars.to.regress = "percent.mt")
-                seurobj[[3]] <- RunPCA(seurobj[[3]], features = VariableFeatures(object = seurobj[[3]]))
-                seurobj[[3]] <- JackStraw(seurobj[[3]], num.replicate = num_replicate)
-                seurobj[[3]] <- ScoreJackStraw(seurobj[[3]], dims = 1:20)
-                JackStrawPlot(seurobj[[3]], dims = 1:20)
-                Elbow <- print(ElbowPlot(seurobj[[3]]))
-                data <- Elbow$data
-                Var1 <- print(ggplot(data, aes(dims, stdev)) + geom_point() + geom_smooth(method = "lm" ,color = "red") +
-                        theme(panel.grid.major = element_blank(),
-                        panel.grid.minor = element_blank(),
-                        panel.background = element_blank(),
-                        axis.line = element_line(colour = "black")))
-                seurat_output <- list(Var1, Elbow, seurobj[[3]])
+        advisedPCs <- which(PCtable < 0)[1] - 1
+        Var2 <- print(ggplot(data, aes(dims, stdev)) + geom_point() + geom_smooth(data = tail(data, 30), 
+                method = "lm" ,color = "red",fullrange=TRUE) +
+                theme(panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank(),
+                panel.background = element_blank(),
+                axis.line = element_line(colour = "black")))
+        seurobj@misc$advisedPCs <- advisedPCs
+        seurobj@misc$PClinearregression <- reg
+        if (SavePlots[1] == "TRUE") {
+                seurobj@misc$PCAPlot <- Var1
+                seurobj@misc$OrigElbowPlot <- Elbow
+                seurobj@misc$LinearRegressionFittedElbow <- Var2
+                print(paste("Principal component analysis complete.", advisedPCs, "principal components are suggested for downstream analysis.")) 
+                return(seurobj)
+        }
+        if (SavePlots[1] == "FALSE") {        
+                print(paste("Principal component analysis complete.", advisedPCs, "principal components are suggested for downstream analysis."))
                 return(seurat_output)
         }
 }
+        
 
 getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25, 
-        start.res = 0.25, end.res = 2) {   
-        seurobj[[3]] <- FindNeighbors(seurobj[[3]], dims = 1:dim)
+        start.res = 0.25, end.res = 2, SCT = c("TRUE", "FALSE")) {   
+        seurobj <- FindNeighbors(seurobj, dims = 1:dim)
         for (i in seq(from = start.res, to = end.res, by = sequence)) {
-                seurobj[[3]] <- FindClusters(seurobj[[3]], resolution = i)
-        }               
+                seurobj <- FindClusters(seurobj, resolution = i)
+        F}               
         tmp <-  1
         ARI <- c()
         names1 <- c()
-        nSample <- round(5000/length(unique(seurobj[[3]]@meta.data$seurat_clusters)))
+        nSample <- round(5000/length(unique(seurobj@meta.data$seurat_clusters)))
         TotalSampledCells <- list()
         pb <- progress_bar$new(
-                format = "  Downsampling your data for silhouette score calculation [:bar] :percent in :elapsed",
-                total = length(unique(seurobj[[3]]@meta.data$seurat_clusters)), 
+                format = "  Calculating silhouette score [:bar] :percent in :elapsed",
+                total = length(unique(seurobj@meta.data$seurat_clusters)), 
                         clear = FALSE, width= 60)
-        for (i in 0:(length(unique(seurobj[[3]]@meta.data$seurat_clusters))-1)) {
+        for (i in 0:(length(unique(seurobj@meta.data$seurat_clusters))-1)) {
                 pb$tick()
-                getCol <- colnames(seurobj[[3]][, seurobj[[3]]@meta.data$seurat_clusters == i])
+                getCol <- colnames(seurobj[, seurobj@meta.data$seurat_clusters == i])
                 SampledCells <- sample(getCol, size = min(nSample, length(getCol)), replace = F)
                 TotalSampledCells[[tmp]] <- SampledCells
                 tmp <- tmp + 1
                 Sys.sleep(1/100)
         }
         tmp <- 1
-        downsampled.obj <- seurobj[[3]][, unlist(TotalSampledCells)]
+        downsampled.obj <- seurobj[, unlist(TotalSampledCells)]
         avg_cluster_sil_scores <- c()
         for(i in seq(from = start.res, to = end.res - sequence, by = sequence)) {
                 j = i + sequence
-                Var1 <- seurobj[[3]]@meta.data[, paste0("RNA_snn_res.",i)]
-                Var2 <- seurobj[[3]]@meta.data[, paste0("RNA_snn_res.",j)]
-                Var3 <- noquote(paste0("RNA_snn_res.",j))
+                if (SCT[1] == "TRUE") { 
+                        Var1 <- seurobj@meta.data[, paste0("SCT_snn_res.",i)]
+                        Var2 <- seurobj@meta.data[, paste0("SCT_snn_res.",j)]
+                        Var3 <- noquote(paste0("SCT_snn_res.",j))
+                }
+                if (SCT[1] == "FALSE") { 
+                        Var1 <- seurobj@meta.data[, paste0("RNA_snn_res.",i)]
+                        Var2 <- seurobj@meta.data[, paste0("RNA_snn_res.",j)]
+                        Var3 <- noquote(paste0("RNA_snn_res.",j))
+                }                        
                 ARI[tmp] <- compare(Var1, Var2, method = "adjusted.rand")
                 names1[tmp] <- Var3
-                Idents(downsampled.obj) <- downsampled.obj@meta.data[, paste0("RNA_snn_res.",j)]
+                if (SCT[1] == "TRUE") {
+                        Idents(downsampled.obj) <- downsampled.obj@meta.data[, paste0("SCT_snn_res.",j)]
+                }
+                if (SCT[1] == "FALSE") { 
+                        Idents(downsampled.obj) <- downsampled.obj@meta.data[, paste0("RNA_snn_res.",j)]
+                }
                 downsampled.obj@meta.data$seurat_clusters <- Idents(downsampled.obj)
                 dist.matrix <- dist(x = Embeddings(object = downsampled.obj[["pca"]])[, 1:dim])
                 sil <- silhouette(as.numeric(as.character(downsampled.obj@meta.data$seurat_clusters)), dist=dist.matrix)
@@ -360,14 +421,19 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
         print(avg_cluster_sil_scores)
         Var4 <- ARI + avg_cluster_sil_scores
         Var5 <- names(Var4[which(max(Var4)== Var4)])
-        Idents(seurobj[[3]]) <- seurobj[[3]]@meta.data[, Var5]
-        seurobj[[3]]@meta.data$seurat_clusters <- Idents(seurobj[[3]]) 
-        seurobj[[3]]@misc$suggested_res <- Var5
-        seurobj[[3]]@misc$ARIs <- ARI
-        seurobj[[3]]@misc$Silhouette_Scores <- avg_cluster_sil_scores
-        Var5 <- as.numeric(noquote(sub("RNA_snn_res.", "", Var5)))
-        print(paste("A resolution of", Var5, "was used for clustering."))
-        return(seurobj[[3]])
+        Idents(seurobj) <- seurobj@meta.data[, Var5]
+        seurobj@meta.data$seurat_clusters <- Idents(seurobj) 
+        seurobj@misc$suggested_res <- Var5
+        seurobj@misc$ARIs <- ARI
+        seurobj@misc$Silhouette_Scores <- avg_cluster_sil_scores
+        if (SCT[1] == "TRUE") {
+                Var5 <- as.numeric(noquote(sub("SCT_snn_res.", "", Var5)))
+        }
+        if (SCT[1] == "FALSE") {
+                Var5 <- as.numeric(noquote(sub("RNA_snn_res.", "", Var5)))
+        }
+        print(paste("A resolution of", Var5, "was used for clustering. Please proceed to doublet removal."))
+        return(seurobj)
 }
 
 ## Doublet Removal
@@ -384,7 +450,7 @@ findDoublets <- function(seurobj, dim = advisedPCs) {
         nEXP = 0.009*(ncol(test1[,test1@meta.data$Condition == i])/1000)*(1-homotypic.prop)*ncol(test1[,test1@meta.data$Condition == i])
         pN <-0.25
         PC <- dim
-        sweep.out <- paramSweep_v3(test1[,test1@meta.data$Condition == i], PCs=1:26)
+        sweep.out <- paramSweep_v3(], PCs=1:26)
         Sys.sleep(1/100)
         }
         sweep.out <- paramSweep_v3(seurobj, PCs=1:PC)
