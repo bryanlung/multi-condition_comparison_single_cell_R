@@ -320,6 +320,22 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
         tmp <-  1
         ARI <- c()
         names1 <- c()
+        nSample <- round(5000/length(unique(seurobj[[3]]@meta.data$seurat_clusters)))
+        TotalSampledCells <- list()
+        z = 1
+        pb <- progress_bar$new(
+                format = "  Downsampling your data [:bar] :percent in :elapsed",
+                total = length(unique(seurobj[[3]]@meta.data$seurat_clusters)), 
+                        clear = FALSE, width= 60)
+        for (i in 0:(length(unique(seurobj[[3]]@meta.data$seurat_clusters))-1)) {
+                pb$tick()
+                getCol <- colnames(seurobj[[3]][, seurobj[[3]]@meta.data$seurat_clusters == i])
+                SampledCells <- sample(getCol, size = min(nSample, length(getCol)), replace = F)
+                TotalSampledCells[[z]] <- SampledCells
+                z <- z + 1
+                Sys.sleep(1/100)
+        }
+        downsampled.obj <- seurobj[[3]][, unlist(TotalSampledCells)]
         for(i in seq(from = start.res, to = end.res - sequence, by = sequence)) {
                 j = i + sequence
                 Var1 <- seurobj[[3]]@meta.data[, paste0("RNA_snn_res.",i)]
@@ -332,20 +348,7 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
         names(ARI) <- names1
         Var4 <- names(ARI[which(max(ARI)== ARI)])
         Var4 <- as.numeric(noquote(sub("RNA_snn_res.", "", Var4)))
-        Var5 <- Var4 - sequence
-        Var4 <- paste0("RNA_snn_res.", Var4)
-        Var5 <- paste0("RNA_snn_res.", Var5)
         
-        nSample <- round(5000/length(unique(seurobj[[3]]@meta.data$seurat_clusters)))
-        TotalSampledCells <- list()
-        z = 1
-        for (i in 0:(length(unique(seurobj[[3]]@meta.data$seurat_clusters))-1)) {
-                getCol <- colnames(seurobj[[3]][, seurobj[[3]]@meta.data$seurat_clusters == i])
-                SampledCells <- sample(getCol, size = min(nSample, length(getCol)), replace = F)
-                TotalSampledCells[[z]] <- SampledCells
-                z <- z + 1
-        }
-        downsampled.obj <- seurobj[[3]][, unlist(TotalSampledCells)]
         avg_cluster_sil_scores <- c()
         Idents(downsampled.obj) <- downsampled.obj@meta.data[, Var4] 
         dist.matrix <- dist(x = Embeddings(object = downsampled.obj[["pca"]])[, 1:26])
