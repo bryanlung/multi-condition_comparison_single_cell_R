@@ -449,7 +449,7 @@ findDoublets <- function(seurobj, dim = advisedPCs) {
         nEXP = 0.009*(ncol(test1[,test1@meta.data$Condition == i])/1000)*(1-homotypic.prop)*ncol(test1[,test1@meta.data$Condition == i])
         pN <-0.25
         PC <- dim
-        sweep.out <- paramSweep_v3(], PCs=1:26)
+        sweep.out <- paramSweep(test1[,test1@meta.data$Condition == "1"]), PCs=1:26)
         Sys.sleep(1/100)
         }
         sweep.out <- paramSweep_v3(seurobj, PCs=1:PC)
