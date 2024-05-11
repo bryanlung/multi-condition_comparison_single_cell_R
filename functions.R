@@ -323,7 +323,7 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
         nSample <- round(5000/length(unique(seurobj[[3]]@meta.data$seurat_clusters)))
         TotalSampledCells <- list()
         pb <- progress_bar$new(
-                format = "  Downsampling your data for silhouette score calculation. [:bar] :percent in :elapsed",
+                format = "  Downsampling your data for silhouette score calculation [:bar] :percent in :elapsed",
                 total = length(unique(seurobj[[3]]@meta.data$seurat_clusters)), 
                         clear = FALSE, width= 60)
         for (i in 0:(length(unique(seurobj[[3]]@meta.data$seurat_clusters))-1)) {
@@ -373,14 +373,21 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
 ## Doublet Removal
 
 findDoublets <- function(seurobj, dim = advisedPCs) { 
-        for (i seurobj@meta.data$Condition) { 
-        type.freq <- table(seurobj@meta.data$seurat_clusters)/ncol(seurobj)
+        pb <- progress_bar$new(
+                format = "  Calculating doublets [:bar] :percent in :elapsed",
+                total = length(unique(test1@meta.data$Condition)), 
+                        clear = FALSE, width= 60)
+        for (i in unique(test1@meta.data$Condition)) { 
+        pb$tick()
+        type.freq <- table(test1@meta.data$seurat_clusters[test1@meta.data$Condition == i])/ncol(test1[,test1@meta.data$Condition == i])
         homotypic.prop <- sum(type.freq^2)
-        nEXP = 0.009*(ncol(seurobj)/1000)*(1-homotypic.prop)*ncol(seurobj)
-        print(nEXP)
+        nEXP = 0.009*(ncol(test1[,test1@meta.data$Condition == i])/1000)*(1-homotypic.prop)*ncol(test1[,test1@meta.data$Condition == i])
         pN <-0.25
-        PCs <- dim
-        sweep.out <- paramSweep_v3(seurobj, PCs=1:PCs)
+        PC <- dim
+        sweep.out <- paramSweep_v3(test1[,test1@meta.data$Condition == i], PCs=1:26)
+        Sys.sleep(1/100)
+        }
+        sweep.out <- paramSweep_v3(seurobj, PCs=1:PC)
         sweep.stats <- summarizeSweep(sweep.out)
         print(plot(sweep.stats[,2:3]))
         print(plot(sweep.stats[,1:3]))
