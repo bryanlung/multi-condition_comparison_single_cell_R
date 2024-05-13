@@ -419,7 +419,7 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
         print("Silhouette Score")
         print(avg_cluster_sil_scores)
         Var4 <- ARI + avg_cluster_sil_scores
-        Var5 <- names(Var4[which(max(Var4)== Var4)])
+        Var5 <- names(Var4[which(max(Var4) == Var4)])
         Idents(seurobj) <- seurobj@meta.data[, Var5]
         seurobj@meta.data$seurat_clusters <- Idents(seurobj) 
         seurobj@misc$suggested_res <- Var5
@@ -437,38 +437,39 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
 
 ## Doublet Removal
 
-findDoublets <- function(seurobj, dim = advisedPCs) { 
-        pb <- progress_bar$new(
-                format = "  Calculating doublets [:bar] :percent in :elapsed",
-                total = length(unique(test1@meta.data$Condition)), 
-                        clear = FALSE, width= 60)
+findDoublets <- function(seurobj, dim = advisedPCs, SCT = c("FALSE", "TRUE")) { 
         for (i in unique(test1@meta.data$Condition)) { 
-        pb$tick()
-        type.freq <- table(test1@meta.data$seurat_clusters[test1@meta.data$Condition == i])/ncol(test1[,test1@meta.data$Condition == i])
-        homotypic.prop <- sum(type.freq^2)
-        nEXP = 0.009*(ncol(test1[,test1@meta.data$Condition == i])/1000)*(1-homotypic.prop)*ncol(test1[,test1@meta.data$Condition == i])
-        pN <-0.25
-        PC <- dim
-        sweep.out <- paramSweep(test1[,test1@meta.data$Condition == "1"]), PCs=1:26)
-        Sys.sleep(1/100)
+                type.freq <- table(test1@meta.data$seurat_clusters[test1@meta.data$Condition == i])/ncol(test1[,test1@meta.data$Condition == i])
+                homotypic.prop <- sum(type.freq^2)
+                nEXP = 0.009*(ncol(test1[,test1@meta.data$Condition == i])/1000)*(1-homotypic.prop)*ncol(test1[,test1@meta.data$Condition == i])
+                pN <- 0.25
+                PC <- 28
+                if (SCT[1] == "TRUE") {
+                        sweep.out <- paramSweep(test1[,test1@meta.data$Condition == i], PCs=1:PC, sct = T)
+                }
+                if (SCT[1] == "FALSE") {
+                        sweep.out <- paramSweep(test1[,test1@meta.data$Condition == i], PCs=1:PC, sct = F)
+                }
+                sweep.stats <- summarizeSweep(sweep.out)
+                maxBCreal <- data.frame(which(sweep.stats == max(sweep.stats$BCreal), arr.ind=TRUE))
+                DoubletParameters <- print(sweep.stats[maxBCreal$row,])
+                pK <- as.numeric(as.character(DoubletParameters$pK))
+                pN <- as.numeric(as.character(DoubletParameters$pN))
+                if (SCT[1] == "TRUE") {
+                        test2 <- doubletFinder(test1[,test1@meta.data$Condition == i], PCs=1:28, pN=pN, pK=pK, nExp=nEXP, sct = T)
+                        X <- paste("DF.classifications", pN, pK, nEXP, sep="_")
+                        <- test2@meta.data[,X]
+                        test2@meta.data$DFCLASSIFICATIONS <- test2@meta.data[,X]
+                }
+                if (SCT[1] == "FALSE") {
+                        test1 <- doubletFinder(test1[,test1@meta.data$Condition == i], PCs=1:28, pN=pN, pK=pK, nExp=nEXP, sct = F)  
+                }
         }
-        sweep.out <- paramSweep_v3(seurobj, PCs=1:PC)
-        sweep.stats <- summarizeSweep(sweep.out)
-        print(plot(sweep.stats[,2:3]))
-        print(plot(sweep.stats[,1:3]))
-        print((sweep.stats[,]))
-        print(sweep.stats[as.numeric(as.character(sweep.stats[,3])) > 0.88,])
-        maxBCreal <- print(data.frame(which(sweep.stats == max(sweep.stats$BCreal),arr.ind=TRUE)))
-        DoubletParameters <- print(sweep.stats[maxBCreal$row,])
-        pK = print(as.numeric(as.character(DoubletParameters$pK)))
-        pN = print(as.numeric(as.character(DoubletParameters$pN)))
-        object <- doubletFinder_v3(object, PCs=1:PCs, pN=pN, pK=pK, nExp=nEXP)
-        print(head(object@meta.data))
-        X <- paste("DF.classifications", pN, pK, nEXP, sep="_")
-        print(table(object@meta.data$seurat_clusters, object@meta.data[,X]))
+
+        
+
         object <- RunUMAP(object, dims=1:50)
         print(DimPlot(object, reduction="umap", group.by=X))
-        object@meta.data$DFCLASSIFICATIONS <- object@meta.data[,X]
 
 
                 
