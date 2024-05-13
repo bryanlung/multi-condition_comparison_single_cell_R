@@ -364,7 +364,7 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
         seurobj <- FindNeighbors(seurobj, dims = 1:dim)
         for (i in seq(from = start.res, to = end.res, by = sequence)) {
                 seurobj <- FindClusters(seurobj, resolution = i)
-        F}               
+        }               
         tmp <-  1
         ARI <- c()
         names1 <- c()
@@ -435,9 +435,9 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
         return(seurobj)
 }
 
-## Doublet Removal
+## Doublet Removal at UMAP Generation
 
-findDoublets <- function(seurobj, dim = advisedPCs, SCT = c("FALSE", "TRUE")) { 
+findDoublets <- function(seurobj, dim = advisedPCs, SCT = c("FALSE", "TRUE"), SavePlots = c("FALSE", "TRUE")) { 
         doublet_list <- list()
         for (i in unique(seurobj@meta.data$Condition)) { 
                 type.freq <- table(seurobj@meta.data$seurat_clusters[seurobj@meta.data$Condition == i])/ncol(seurobj[,seurobj@meta.data$Condition == i])
@@ -467,16 +467,23 @@ findDoublets <- function(seurobj, dim = advisedPCs, SCT = c("FALSE", "TRUE")) {
                 }
         }
         seurobj@meta.data$DFCLASSIFICATIONS <- unlist(doublet_list)
-        return(seurobj)
-}
-  
-
+        seurobj <- RunUMAP(seurobj, dims=1:PC)
+        UMAP <- print(DimPlot(seurobj, reduction = "umap"))
+        UMAP_Condition <- print(DimPlot(seurobj, reduction = "umap", group.by = "Condition"))
+        UMAP_DFCLASSFICATIONS <- print(DimPlot(seurobj, reduction="umap", group.by= "DFCLASSIFICATIONS"))
+        if (SavePlots[1] == "TRUE") {
+                seurobj@misc$UMAP <- UMAP
+                seurobj@misc$UMAP_Condition <- UMAP_Condition
+                seurobj@misc$UMAP_DFCLASSFICATIONS  <- UMAP_DFCLASSFICATIONS 
+                print("Doublet removal is now completed and UMAP is generated. Please proceed to annotating the cells.")
+                return(seurobj)
+        }
+        if (SavePlots[1] == "FALSE") { 
+                print("Doublet removal is now completed and UMAP is generated. Please proceed to annotating the cells.")
+                return(seurobj)
+        }
         
-
-        object <- RunUMAP(object, dims=1:50)
-        print(DimPlot(object, reduction="umap", group.by=X))
-
-
+}
                 
 ## Simpson Index with respect to each condition
 
