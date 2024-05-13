@@ -437,7 +437,7 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
 
 ## Doublet Removal at UMAP Generation
 
-findDoublets <- function(seurobj, dim = advisedPCs, SCT = c("FALSE", "TRUE"), SavePlots = c("FALSE", "TRUE")) { 
+findDoublets <- function(seurobj, dim = advisedPCs, SCT = c("FALSE", "TRUE")) { 
         doublet_list <- list()
         for (i in unique(seurobj@meta.data$Condition)) { 
                 type.freq <- table(seurobj@meta.data$seurat_clusters[seurobj@meta.data$Condition == i])/ncol(seurobj[,seurobj@meta.data$Condition == i])
@@ -467,24 +467,34 @@ findDoublets <- function(seurobj, dim = advisedPCs, SCT = c("FALSE", "TRUE"), Sa
                 }
         }
         seurobj@meta.data$DFCLASSIFICATIONS <- unlist(doublet_list)
-        seurobj <- RunUMAP(seurobj, dims=1:PC)
-        UMAP <- print(DimPlot(seurobj, reduction = "umap"))
-        UMAP_Condition <- print(DimPlot(seurobj, reduction = "umap", group.by = "Condition"))
-        UMAP_DFCLASSFICATIONS <- print(DimPlot(seurobj, reduction="umap", group.by= "DFCLASSIFICATIONS"))
-        if (SavePlots[1] == "TRUE") {
-                seurobj@misc$UMAP <- UMAP
-                seurobj@misc$UMAP_Condition <- UMAP_Condition
-                seurobj@misc$UMAP_DFCLASSFICATIONS  <- UMAP_DFCLASSFICATIONS 
-                print("Doublet removal is now completed and UMAP is generated. Please proceed to annotating the cells.")
-                return(seurobj)
-        }
-        if (SavePlots[1] == "FALSE") { 
-                print("Doublet removal is now completed and UMAP is generated. Please proceed to annotating the cells.")
-                return(seurobj)
-        }
-        
+        print("Doublet removal is now completed. Please proceed to UMAP generation and cell annotation.")
 }
-                
+
+getAnnotations <- function(seurobj, dim = advisedPCs, SavePlots = c("FALSE", "TRUE"), only_pos = TRUE, 
+        min_pct = 0.01, logfc_threshold = -Inf) {
+                seurobj <- RunUMAP(seurobj, dims=1:dim)
+                UMAP <- print(DimPlot(seurobj, reduction = "umap"))
+                UMAP_Condition <- print(DimPlot(seurobj, reduction = "umap", group.by = "Condition"))
+                UMAP_DFCLASSFICATIONS <- print(DimPlot(seurobj, reduction="umap", group.by= "DFCLASSIFICATIONS"))
+                Var1 <- paste0(seurobj, ".markers")
+                Var1 <- FindAllMarkers(seurobj, only.pos = only_pos, min.pct = min_pct, logfc.threshold = logfc_threshold)
+                Var1 %>%
+                group_by(cluster) %>%
+                dplyr::filter(avg_log2FC > 1)
+                seurobj@misc$annotation_markers <- Var1
+                if (SavePlots[1] == "TRUE") {
+                        seurobj@misc$UMAP <- UMAP
+                        seurobj@misc$UMAP_Condition <- UMAP_Condition
+                        seurobj@misc$UMAP_DFCLASSFICATIONS  <- UMAP_DFCLASSFICATIONS 
+                        print("UMAP is now generated. Please use marker genes to annotate clusters.")
+                        return(seurobj)
+                }
+                if (SavePlots[1] == "FALSE") { 
+                        print("UMAP is now generated. Please use marker genes to annotate clusters.")
+                        return(seurobj)
+                }
+}
+
 ## Simpson Index with respect to each condition
 
 getSimpson <- function(seurobj, samples, resolution) {
