@@ -314,7 +314,7 @@ getSubsetThresholds <- function(seurobj, nFeature_RNA_bot, nFeature_RNA_top,
                 }
 }
                     
-##subtest <- getSubsetThresholds(test1,200,2000,200,5000,2, normalization_method= "FALSE", selection_method= "FALSE", SavePlots = "TRUE")                             
+##subtest <- getSubsetThresholds(seurobj,200,2000,200,5000,2, normalization_method= "FALSE", selection_method= "FALSE", SavePlots = "TRUE")                             
 
 ## Clustering and Doublet Removal  
 
@@ -438,17 +438,18 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
 ## Doublet Removal
 
 findDoublets <- function(seurobj, dim = advisedPCs, SCT = c("FALSE", "TRUE")) { 
-        for (i in unique(test1@meta.data$Condition)) { 
-                type.freq <- table(test1@meta.data$seurat_clusters[test1@meta.data$Condition == i])/ncol(test1[,test1@meta.data$Condition == i])
+        doublet_list <- list()
+        for (i in unique(seurobj@meta.data$Condition)) { 
+                type.freq <- table(seurobj@meta.data$seurat_clusters[seurobj@meta.data$Condition == i])/ncol(seurobj[,seurobj@meta.data$Condition == i])
                 homotypic.prop <- sum(type.freq^2)
-                nEXP = 0.009*(ncol(test1[,test1@meta.data$Condition == i])/1000)*(1-homotypic.prop)*ncol(test1[,test1@meta.data$Condition == i])
+                nEXP = 0.009*(ncol(seurobj[,seurobj@meta.data$Condition == i])/1000)*(1-homotypic.prop)*ncol(seurobj[,seurobj@meta.data$Condition == i])
                 pN <- 0.25
-                PC <- 28
+                PC <- dim
                 if (SCT[1] == "TRUE") {
-                        sweep.out <- paramSweep(test1[,test1@meta.data$Condition == i], PCs=1:PC, sct = T)
+                        sweep.out <- paramSweep(seurobj[,seurobj@meta.data$Condition == i], PCs=1:PC, sct = T)
                 }
                 if (SCT[1] == "FALSE") {
-                        sweep.out <- paramSweep(test1[,test1@meta.data$Condition == i], PCs=1:PC, sct = F)
+                        sweep.out <- paramSweep(seurobj[,seurobj@meta.data$Condition == i], PCs=1:PC, sct = F)
                 }
                 sweep.stats <- summarizeSweep(sweep.out)
                 maxBCreal <- data.frame(which(sweep.stats == max(sweep.stats$BCreal), arr.ind=TRUE))
@@ -456,15 +457,19 @@ findDoublets <- function(seurobj, dim = advisedPCs, SCT = c("FALSE", "TRUE")) {
                 pK <- as.numeric(as.character(DoubletParameters$pK))
                 pN <- as.numeric(as.character(DoubletParameters$pN))
                 if (SCT[1] == "TRUE") {
-                        test2 <- doubletFinder(test1[,test1@meta.data$Condition == i], PCs=1:28, pN=pN, pK=pK, nExp=nEXP, sct = T)
+                        tmpseurobj <- doubletFinder(seurobj[,seurobj@meta.data$Condition == i], PCs=1:PC, pN=pN, pK=pK, nExp=nEXP, sct = T)
                         X <- paste("DF.classifications", pN, pK, nEXP, sep="_")
-                        <- test2@meta.data[,X]
-                        test2@meta.data$DFCLASSIFICATIONS <- test2@meta.data[,X]
+                        Var1 <- tmpseurobj@meta.data[,X]
+                        doublet_list[[i]] <- Var1
                 }
                 if (SCT[1] == "FALSE") {
-                        test1 <- doubletFinder(test1[,test1@meta.data$Condition == i], PCs=1:28, pN=pN, pK=pK, nExp=nEXP, sct = F)  
+                        seurobj <- doubletFinder(seurobj[,seurobj@meta.data$Condition == i], PCs=1:PC, pN=pN, pK=pK, nExp=nEXP, sct = F)  
                 }
         }
+        seurobj@meta.data$DFCLASSIFICATIONS <- unlist(doublet_list)
+        return(seurobj)
+}
+  
 
         
 
