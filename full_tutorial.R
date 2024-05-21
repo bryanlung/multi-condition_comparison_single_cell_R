@@ -27,6 +27,7 @@ files <- list.files(path = "/home/bryanl/scratch/MBI4850G/finalproject",recursiv
 files <- list.files(path = "/home/bryanl/scratch/testdatasets",recursive = F, full.name = T)
 
 files <- as.data.frame(files)
+files$files <- files
 
 ## Name Your Conditions/Samples 
 
