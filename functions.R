@@ -519,9 +519,14 @@ getSimpson <- function(seurobj, samples, resolution) {
         tab <- tab/sum(tab)
         return(sum(tab^2))
         }
+        for (i in unique(subtest@meta.data$Condition)) { 
+                
+        cluster_comp <- table(subtest[,subtest@meta.data[, paste0(Condition) == i],
+                subtest@meta.data[, paste0("SCT_snn_res.",2)])
+        print(cluster_comp)
+         }       
 
-        cluster_comp <- table(seurobj@meta.data[, samples],
-                seurobj@meta.data[, (paste0("RNA_snn_res.",resolution))])
+        seurobj@meta.data$seurat_clusters[seurobj@meta.data$Condition == i])
         simpson <- round(simpson_index(seurobj@meta.data[, samples],
                 seurobj@meta.data$seurat_clusters), digits=2)
         simpson.optimal <- round(simpson_index_optimal(
