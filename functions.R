@@ -124,7 +124,7 @@ recSeuratMerge <- function(SeurObj) {
 
 getRecursiveMerge <- function(SeurObj) {
         A <- recSeuratMerge(SeurObj)
-        print(paste("Dataset merging is now completed.", nrow(files$files), 
+        print(paste("Dataset merging is now completed.", length(files$files), 
                 "Seurat objects were merged."))
         return(A)
 }
