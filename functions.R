@@ -481,8 +481,9 @@ getAnnotations <- function(seurobj, dim = advisedPCs, SavePlots = c("FALSE", "TR
                 UMAP_Condition <- print(DimPlot(seurobj, reduction = "umap", group.by = "Condition"))
                 UMAP_DFCLASSFICATIONS <- print(DimPlot(seurobj, reduction="umap", group.by= "DFCLASSIFICATIONS"))
                 if (SCT[1] == "TRUE") {
-                         seurobj <- PrepSCTFindMarkers(seurobj)
-                         Var1 <- FindAllMarkers(subtest, only.pos = only_pos, min.pct = min_pct, logfc.threshold = logfc_threshold)
+                         Var1 <- PrepSCTFindMarkers(seurobj)
+                         Var1 <- FindAllMarkers(Var1, only.pos = only_pos, min.pct = min_pct, logfc.threshold = logfc_threshold,
+                                 assay = "SCT")
                 }
                 if (SCT[1] == "FALSE") {
                         Var1 <- FindAllMarkers(subtest, only.pos = only_pos, min.pct = min_pct, logfc.threshold = logfc_threshold)
