@@ -12,35 +12,39 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                         j <- files$Condition[files == i] 
                         k <- read.delim(paste(i, sep = ""), row.names = 1)
                         k <-  as.sparse(k)
-                        l <- files$Sample[files == i]
+                        l <- files$Samples[files == i]
                         DatasetName <- paste(j,l,i, sep = "_")
                         output_list[[DatasetName]] <- k        
                         }  
                 else if (grepl(".rds$", i) | grepl(".RDS$", i) == T) {
                         j <- files$Condition[files == i] 
                         k <- readRDS(paste(i, sep = ""))
-                        DatasetName <- paste(j,i, sep = "_")
+                        l <- files$Samples[files == i]
+                        DatasetName <- paste(j,l,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
                 else if (grepl(".mtx$", i) | grepl("filtered_feature_bc_matrix$", i) == T) {
                         j <- files$Condition[files == i] 
                         k <- read10X(paste(i, sep = ""))
                         k <- as.sparse(k)
-                        DatasetName <- paste(j,i, sep = "_")
+                        l <- files$Samples[files == i]
+                        DatasetName <- paste(j,l,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
                 else if (grepl(".csv$", i) | grepl(".csv.gz$", i) == T) {
                         j <- files$Condition[files == i] 
                         k <- read.csv(paste(i, sep = ""), row.names = 1)
                         k <- as.sparse(k)
-                        DatasetName <- paste(j,i, sep = "_")
+                        l <- files$Samples[files == i]
+                        DatasetName <- paste(j,l,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 }
                 else if (grepl(".tsv$", i) | grepl(".tsv.gz$", i) == T) {
                         j <- files$Condition[files == i] 
                         k <- read.csv(paste(i, sep = "\t"), row.names = 1)
                         k <- as.sparse(k)
-                        DatasetName <- paste(j,i, sep = "_")
+                        l <- files$Samples[files == i]
+                        DatasetName <- paste(j,l,i, sep = "_")
                         output_list[[DatasetName]] <- k
                 } else {
                         stop("Your file type is currently not supported.")
@@ -49,7 +53,8 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
         }
         split_DatasetName <- strsplit(names(output_list), "_")
         Condition <- sapply(split_DatasetName, function(x){x[[1]]})
-        Sample.Ident <- sapply(split_DatasetName, function(x){paste(x[c(2)],
+        Samples <- sapply(split_DatasetName, function(x){x[[2]]})
+        Sample.Ident <- sapply(split_DatasetName, function(x){paste(x[c(3)],
                collapse= "_")})
         Seurat_list <- list()
         pb1 <- progress_bar$new(
