@@ -475,13 +475,18 @@ findDoublets <- function(seurobj, dim = advisedPCs, SCT = c("FALSE", "TRUE")) {
 }
 
 getAnnotations <- function(seurobj, dim = advisedPCs, SavePlots = c("FALSE", "TRUE"), only_pos = TRUE, 
-        min_pct = 0.01, logfc_threshold = -Inf) {
+        min_pct = 0.01, logfc_threshold = -Inf, SCT = c("FALSE", "TRUE")) {
                 seurobj <- RunUMAP(seurobj, dims=1:dim)
                 UMAP <- print(DimPlot(seurobj, reduction = "umap"))
                 UMAP_Condition <- print(DimPlot(seurobj, reduction = "umap", group.by = "Condition"))
                 UMAP_DFCLASSFICATIONS <- print(DimPlot(seurobj, reduction="umap", group.by= "DFCLASSIFICATIONS"))
-                Var1 <- paste0(seurobj, ".markers")
-                Var1 <- FindAllMarkers(seurobj, only.pos = only_pos, min.pct = min_pct, logfc.threshold = logfc_threshold)
+                if (SCT[1] == "TRUE") {
+                         seurobj <- PrepSCTFindMarkers(seurobj)
+                         Var1 <- FindAllMarkers(subtest, only.pos = only_pos, min.pct = min_pct, logfc.threshold = logfc_threshold)
+                }
+                if (SCT[1] == "FALSE") {
+                        Var1 <- FindAllMarkers(subtest, only.pos = only_pos, min.pct = min_pct, logfc.threshold = logfc_threshold)
+                }
                 Var1 %>%
                 group_by(cluster) %>%
                 dplyr::filter(avg_log2FC > 1)
