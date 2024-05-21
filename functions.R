@@ -61,15 +61,16 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                 format = "  Creating Your Seurat Object [:bar] :percent in :elapsed",
                 total = length(files$files), clear = FALSE, width= 60)
         for (i in seq(from = 1, to = length(files$files), by = 1)) {
-                j = i
+                j <- i
                 pb1$tick()
                 if (class(output_list[[i]]) != "SeuratObject") {
-                        j = i         
+                        j <- i         
                         k <- CreateSeuratObject(counts = output_list[i], 
                                 project = Sample.Ident[j], min.cells = min.cells, 
                                 min.features = min.features, meta.data = meta.data)
                         k@meta.data$Condition <- Condition[j]
                         k@meta.data$Sample.Ident <- Sample.Ident[j]
+                        k@meta.data$Samples <- Samples[j]
                         SeuratObjectName <- paste(names(output_list)[j], "SeuratObject", sep = "_")
                         Seurat_list[[SeuratObjectName]] <- k
                 }
@@ -123,7 +124,7 @@ recSeuratMerge <- function(SeurObj) {
 
 getRecursiveMerge <- function(SeurObj) {
         A <- recSeuratMerge(SeurObj)
-        print(paste("Dataset merging is now completed.", length(files$files), 
+        print(paste("Dataset merging is now completed.", nrow(files$files), 
                 "Seurat objects were merged."))
         return(A)
 }
