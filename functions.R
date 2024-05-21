@@ -12,7 +12,8 @@ getAllSeuratObject <- function(files, min.cells = 3, min.features = 200,
                         j <- files$Condition[files == i] 
                         k <- read.delim(paste(i, sep = ""), row.names = 1)
                         k <-  as.sparse(k)
-                        DatasetName <- paste(j,i, sep = "_")
+                        l <- files$Sample[files == i]
+                        DatasetName <- paste(j,l,i, sep = "_")
                         output_list[[DatasetName]] <- k        
                         }  
                 else if (grepl(".rds$", i) | grepl(".RDS$", i) == T) {
