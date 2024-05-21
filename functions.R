@@ -463,11 +463,15 @@ findDoublets <- function(seurobj, dim = advisedPCs, SCT = c("FALSE", "TRUE")) {
                         doublet_list[[i]] <- Var1
                 }
                 if (SCT[1] == "FALSE") {
-                        seurobj <- doubletFinder(seurobj[,seurobj@meta.data$Condition == i], PCs=1:PC, pN=pN, pK=pK, nExp=nEXP, sct = F)  
+                        tmpseurobj <- doubletFinder(seurobj[,seurobj@meta.data$Condition == i], PCs=1:PC, pN=pN, pK=pK, nExp=nEXP, sct = F) 
+                        X <- paste("DF.classifications", pN, pK, nEXP, sep="_")
+                        Var1 <- tmpseurobj@meta.data[,X]
+                        doublet_list[[i]] <- Var1
                 }
         }
         seurobj@meta.data$DFCLASSIFICATIONS <- unlist(doublet_list)
         print("Doublet removal is now completed. Please proceed to UMAP generation and cell annotation.")
+        return(seurobj)
 }
 
 getAnnotations <- function(seurobj, dim = advisedPCs, SavePlots = c("FALSE", "TRUE"), only_pos = TRUE, 
