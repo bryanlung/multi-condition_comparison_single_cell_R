@@ -30,7 +30,8 @@ files <- as.data.frame(files)
 
 ## Name Your Conditions/Samples 
 
-files$ConditionNames <- c("your_conditions_names")
+files$Condition <- c("your_conditions_names")
+files$Samples <- c("your_sample_names")
 
 ## Creating a Seurat Object
 
