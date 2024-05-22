@@ -446,17 +446,17 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
 
 findDoublets <- function(seurobj, dim = advisedPCs, SCT = c("FALSE", "TRUE")) { 
         doublet_list <- list()
-        for (i in unique(seurobj@meta.data$Condition)) { 
-                type.freq <- table(seurobj@meta.data$seurat_clusters[seurobj@meta.data$Condition == i])/ncol(seurobj[,seurobj@meta.data$Condition == i])
+        for (i in unique(seurobj@meta.data$Samples)) { 
+                type.freq <- table(seurobj@meta.data$seurat_clusters[seurobj@meta.data$Samples == i])/ncol(seurobj[,seurobj@meta.data$Samples == i])
                 homotypic.prop <- sum(type.freq^2)
-                nEXP = 0.009*(ncol(seurobj[,seurobj@meta.data$Condition == i])/1000)*(1-homotypic.prop)*ncol(seurobj[,seurobj@meta.data$Condition == i])
+                nEXP = 0.009*(ncol(seurobj[,seurobj@meta.data$Samples == i])/1000)*(1-homotypic.prop)*ncol(seurobj[,seurobj@meta.data$Samples == i])
                 pN <- 0.25
                 PC <- dim
                 if (SCT[1] == "TRUE") {
-                        sweep.out <- paramSweep(seurobj[,seurobj@meta.data$Condition == i], PCs=1:PC, sct = T)
+                        sweep.out <- paramSweep(seurobj[,seurobj@meta.data$Samples == i], PCs=1:PC, sct = T)
                 }
                 if (SCT[1] == "FALSE") {
-                        sweep.out <- paramSweep(seurobj[,seurobj@meta.data$Condition == i], PCs=1:PC, sct = F)
+                        sweep.out <- paramSweep(seurobj[,seurobj@meta.data$Samples == i], PCs=1:PC, sct = F)
                 }
                 sweep.stats <- summarizeSweep(sweep.out)
                 maxBCreal <- data.frame(which(sweep.stats == max(sweep.stats$BCreal), arr.ind=TRUE))
@@ -464,13 +464,13 @@ findDoublets <- function(seurobj, dim = advisedPCs, SCT = c("FALSE", "TRUE")) {
                 pK <- as.numeric(as.character(DoubletParameters$pK))
                 pN <- as.numeric(as.character(DoubletParameters$pN))
                 if (SCT[1] == "TRUE") {
-                        tmpseurobj <- doubletFinder(seurobj[,seurobj@meta.data$Condition == i], PCs=1:PC, pN=pN, pK=pK, nExp=nEXP, sct = T)
+                        tmpseurobj <- doubletFinder(seurobj[,seurobj@meta.data$Samples == i], PCs=1:PC, pN=pN, pK=pK, nExp=nEXP, sct = T)
                         X <- paste("DF.classifications", pN, pK, nEXP, sep="_")
                         Var1 <- tmpseurobj@meta.data[,X]
                         doublet_list[[i]] <- Var1
                 }
                 if (SCT[1] == "FALSE") {
-                        tmpseurobj <- doubletFinder(seurobj[,seurobj@meta.data$Condition == i], PCs=1:PC, pN=pN, pK=pK, nExp=nEXP, sct = F) 
+                        tmpseurobj <- doubletFinder(seurobj[,seurobj@meta.data$Samples == i], PCs=1:PC, pN=pN, pK=pK, nExp=nEXP, sct = F) 
                         X <- paste("DF.classifications", pN, pK, nEXP, sep="_")
                         Var1 <- tmpseurobj@meta.data[,X]
                         doublet_list[[i]] <- Var1
@@ -481,7 +481,7 @@ findDoublets <- function(seurobj, dim = advisedPCs, SCT = c("FALSE", "TRUE")) {
         return(seurobj)
 }
 
-getAnnotations <- function(seurobj, dim = advisedPCs, SavePlots = c("FALSE", "TRUE"), only_pos = TRUE, 
+getMarkers <- function(seurobj, dim = advisedPCs, SavePlots = c("FALSE", "TRUE"), only_pos = TRUE, 
         min_pct = 0.01, logfc_threshold = -Inf, SCT = c("FALSE", "TRUE")) {
                 seurobj <- RunUMAP(seurobj, dims=1:dim)
                 UMAP <- print(DimPlot(seurobj, reduction = "umap"))
