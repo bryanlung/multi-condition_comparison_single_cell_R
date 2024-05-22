@@ -560,7 +560,24 @@ getSimpson <- function(seurobj, resolution, SCT = c("TRUE", "FALSE")) {
                 }
         output_list[[i]] <- clustervariance
         }
-        test <- unlist(output_list)
+        test <- data.frame(output_list)
+        variancepercentage <- list()
+        for (i in colnames(test)) { 
+                Var4 <- max(test[,i])
+                variancepercentage[[i]] <- test[,i]/Var4  
+        }
+        test <- data.frame(variancepercentage)
+        test$clusters <- rownames(test)
+        if (
+        test$clusters <- factor(test$cluster, levels = c(1:length(test$clusters)))
+        test <- melt(test)
+        ggplot(test, aes(x= clusters , y= variable , fill = value)) + geom_tile() +
+                theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+                panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                panel.background = element_blank(), axis.line = element_line(colour = "white")) +
+                labs(x= "Clusters" , y= NULL) + scale_fill_gradient(low = "black", high = "red", 
+                name= "Variance")
+        
         Var1 <- print(round(mean(totalsimpson), digits=2))
         Var2 <- print(round(mean(totalsimpson.optimal), digits=2))
         seurobj@misc$simpson <- Var1
