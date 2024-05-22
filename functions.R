@@ -493,7 +493,7 @@ getMarkers <- function(seurobj, dim = advisedPCs, SavePlots = c("FALSE", "TRUE")
                                  assay = "SCT")
                 }
                 if (SCT[1] == "FALSE") {
-                        Var1 <- FindAllMarkers(subtest, only.pos = only_pos, min.pct = min_pct, logfc.threshold = logfc_threshold)
+                        Var1 <- FindAllMarkers(seurobj, only.pos = only_pos, min.pct = min_pct, logfc.threshold = logfc_threshold)
                 }
                 Var1 %>%
                 group_by(cluster) %>%
@@ -514,7 +514,7 @@ getMarkers <- function(seurobj, dim = advisedPCs, SavePlots = c("FALSE", "TRUE")
 
 ## Simpson Index with respect to each condition
 
-getSimpson <- function(seurobj, samples, resolution) {
+getSimpson <- function(seurobj, resolution, SCT = c("TRUE", "FALSE")) {
         simpson_index <- function(sample, cluster) {
                 tab <- table(sample, cluster)
                 tab <- t(t(tab)/colSums(tab))
@@ -526,39 +526,66 @@ getSimpson <- function(seurobj, samples, resolution) {
         tab <- tab/sum(tab)
         return(sum(tab^2))
         }
-        for (i in 1:max(subtest@meta.data$Condition)) { 
-                tmpseurobj <- subtest[, subtest@meta.data$Condition == i]
-                cluster_comp <- table(tmpseurobj@meta.data$Condition,
-                        tmpseurobj@meta.data[, paste0("SCT_snn_res.",2)])
-                print(cluster_comp)
+        tmp <- 1
+        totalsimpson <- c()
+        names1 <- c()
+        output_list <- list()
+        for (i in unique(seurobj@meta.data$Condition)) { 
+                tmpseurobj <- seurobj[, seurobj@meta.data$Condition == i]
+                if (SCT[1] == "TRUE") {
+                cluster_comp <- table(tmpseurobj@meta.data$Samples,
+                        tmpseurobj@meta.data[, paste0("SCT_snn_res.", resolution)])
+                }
+                if (SCT[1] == "FALSE") {
+                cluster_comp <- table(tmpseurobj@meta.data$Samples,
+                        tmpseurobj@meta.data[, paste0("RNA_snn_res.", resolution)])
+                }
+                simpson <- round(simpson_index(tmpseurobj@meta.data[, "Samples"],
+                        tmpseurobj@meta.data$seurat_clusters), digits=2)
+                simpson.optimal <- round(simpson_index_optimal(
+                tmpseurobj@meta.data[, "Samples"]), digits=2)
+                simpson <- simpson[!is.na(simpson)]
+                simpson.optimal <- simpson.optimal[!is.na(simpson.optimal)]
+                totalsimpson[tmp] <- round(mean(simpson), digits=2)
+                totalsimpson.optimal[tmp] <- simpson.optimal
+                names1[tmp] <- i
+                names(totalsimpson) <- names1
+                names(totalsimpson.optimal) <- names1
+                cluster_comp <- cluster_comp/ncol(tmpseurobj) *100
+                clustervariance <- c()
+                tmp1 <- 1
+                for (j in 1:ncol(cluster_comp)) { 
+                        clustervariance[tmp1] <- var(cluster_comp[,j])
+                        tmp1 <- tmp1 + 1       
+                }
+        output_list[[i]] <- clustervariance
         }
-        
-
-        
+        test <- unlist(output_list)
+        Var1 <- print(round(mean(totalsimpson), digits=2))
+        Var2 <- print(round(mean(totalsimpson.optimal), digits=2))
+        seurobj@misc$simpson <- Var1
+        seurobj@misc$simpson.optimal <- Var2
+        if (Var1 > 2* Var2) {
+                print("Integration is recommended")
+        } else {
+                print("Integration is not recommended")
+        }
+        return(test)
+}   
      
 
         seurobj@meta.data$seurat_clusters[seurobj@meta.data$Condition == i])
-        simpson <- round(simpson_index(seurobj@meta.data[, samples],
-                seurobj@meta.data$seurat_clusters), digits=2)
-        simpson.optimal <- round(simpson_index_optimal(
-                seurobj@meta.data[, samples]), digits=2)
-        Var1 <- max(colSums(cluster_comp/ncol(seurobj))) * 1.1
+        Var3 <- max(colSums(cluster_comp/ncol(seurobj))) * 1.1
         b_loc <- barplot(cluster_comp/ncol(seurobj),
                  col=RColorBrewer::brewer.pal(nrow(cluster_comp), "Set3"),
                  xlab = "Clusters", ylab = "Proportion",
-                 ylim = c(0, Var1))
+                 ylim = c(0, Var3))
                  text(x=b_loc, y=colSums(cluster_comp/ncol(seurobj)),
                  labels=simpson, pos=3, cex = 0.7)
                  legend("topright",
                  c(paste("Expected Simpson =", simpson.optimal),
                  paste("Average Simpson =", round(mean(simpson), digits=2)),
                  paste("Maximum Simpson =", max(simpson))), bty="n")
-        if (round(mean(simpson) > 2* simpson.optimal)) {
-                print("Integration is recommended")
-        } else {
-                print("Integration is not recommended")
-        }
-}
 
 ## Pseudobulk Expression Matrix
 
