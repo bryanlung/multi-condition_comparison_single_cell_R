@@ -555,20 +555,19 @@ getSimpson <- function(seurobj, resolution, SCT = c("TRUE", "FALSE")) {
         totalsimpson.optimal <- as.data.frame(totalsimpson.optimal)
         totalsimpson.optimal$Condition <- rownames(totalsimpson.optimal)
         totalsimpson.optimal$Placeholder <- rep("A", length(rownames(totalsimpson.optimal)))
-        p <- print(ggplot(simpson, aes(x = clusters , y = variable , fill = value)) + geom_tile() +
+        p <- ggplot(simpson, aes(x = clusters , y = variable , fill = value)) + geom_tile() +
                 theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
                 panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
                 panel.background = element_blank(), axis.line = element_line(colour = "white")) +
-                labs(x= "Clusters" , y = NULL) + scale_fill_gradient(low = "black", high = "red", 
-                name= "Simpson"))
-        q <- print(ggplot(totalsimpson.optimal, aes(x = Placeholder ,y = Condition, fill = totalsimpson.optimal)) + 
+                labs(x= "Clusters" , y = NULL) + scale_fill_gradient(low = "black", high = "yellow", 
+                name= "Simpson") + ggtitle("Simpson per Cluster")
+        q <- ggplot(totalsimpson.optimal, aes(x = Placeholder ,y = Condition, fill = totalsimpson.optimal)) + 
                 geom_tile() + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
                 panel.background = element_blank(), axis.line = element_line(colour = "white"), 
                 axis.title.x=element_blank(), axis.text.x=element_blank(),
-                axis.ticks.x=element_blank())+ scale_fill_gradient(low = "black", high = "red", 
-                name= "Simpson", limits = c(0, 1)) + labs(y = NULL))
-        ggarrange(p, q, common.legend = TRUE, legend="bottom")
-        
+                axis.ticks.x=element_blank()) + scale_fill_gradient(low = "black", high = "yellow", 
+                name= "Simpson", limits = c(0, 1)) + labs(y = NULL) + ggtitle("Expected Simpson")
+        print(ggarrange(p, q, common.legend = TRUE, legend="bottom"))
         Var2 <- print(round(mean(totalsimpson), digits=2))
         Var3 <- print(round(mean(totalsimpson.optimal), digits=2))
         seurobj@misc$simpson <- Var2
@@ -578,22 +577,8 @@ getSimpson <- function(seurobj, resolution, SCT = c("TRUE", "FALSE")) {
         } else {
                 print("Integration is not recommended")
         }
-        return(test)
+        return(seurobj)
 }   
-     
-
-        seurobj@meta.data$seurat_clusters[seurobj@meta.data$Condition == i])
-        Var3 <- max(colSums(cluster_comp/ncol(seurobj))) * 1.1
-        b_loc <- barplot(cluster_comp/ncol(seurobj),
-                 col=RColorBrewer::brewer.pal(nrow(cluster_comp), "Set3"),
-                 xlab = "Clusters", ylab = "Proportion",
-                 ylim = c(0, Var3))
-                 text(x=b_loc, y=colSums(cluster_comp/ncol(seurobj)),
-                 labels=simpson, pos=3, cex = 0.7)
-                 legend("topright",
-                 c(paste("Expected Simpson =", simpson.optimal),
-                 paste("Average Simpson =", round(mean(simpson), digits=2)),
-                 paste("Maximum Simpson =", max(simpson))), bty="n")
 
 ## Pseudobulk Expression Matrix
 
