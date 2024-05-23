@@ -528,60 +528,51 @@ getSimpson <- function(seurobj, resolution, SCT = c("TRUE", "FALSE")) {
         }
         tmp <- 1
         totalsimpson <- c()
+        totalsimpson.optimal <- c()
         names1 <- c()
         output_list <- list()
         for (i in unique(seurobj@meta.data$Condition)) { 
                 tmpseurobj <- seurobj[, seurobj@meta.data$Condition == i]
-                if (SCT[1] == "TRUE") {
-                cluster_comp <- table(tmpseurobj@meta.data$Samples,
-                        tmpseurobj@meta.data[, paste0("SCT_snn_res.", resolution)])
-                }
-                if (SCT[1] == "FALSE") {
-                cluster_comp <- table(tmpseurobj@meta.data$Samples,
-                        tmpseurobj@meta.data[, paste0("RNA_snn_res.", resolution)])
-                }
                 simpson <- round(simpson_index(tmpseurobj@meta.data[, "Samples"],
                         tmpseurobj@meta.data$seurat_clusters), digits=2)
                 simpson.optimal <- round(simpson_index_optimal(
                 tmpseurobj@meta.data[, "Samples"]), digits=2)
-                simpson <- simpson[!is.na(simpson)]
-                simpson.optimal <- simpson.optimal[!is.na(simpson.optimal)]
+                simpson[is.na(simpson)] = 0
+                simpson.optimal[is.na(simpson.optimal)] = 0 
                 totalsimpson[tmp] <- round(mean(simpson), digits=2)
                 totalsimpson.optimal[tmp] <- simpson.optimal
                 names1[tmp] <- i
                 names(totalsimpson) <- names1
                 names(totalsimpson.optimal) <- names1
-                cluster_comp <- cluster_comp/ncol(tmpseurobj) *100
-                clustervariance <- c()
-                tmp1 <- 1
-                for (j in 1:ncol(cluster_comp)) { 
-                        clustervariance[tmp1] <- var(cluster_comp[,j])
-                        tmp1 <- tmp1 + 1       
-                }
-        output_list[[i]] <- clustervariance
+                output_list[[i]] <- simpson
+                tmp <- tmp + 1
         }
-        test <- data.frame(output_list)
-        variancepercentage <- list()
-        for (i in colnames(test)) { 
-                Var4 <- max(test[,i])
-                variancepercentage[[i]] <- test[,i]/Var4  
-        }
-        test <- data.frame(variancepercentage)
-        test$clusters <- rownames(test)
-        if (
-        test$clusters <- factor(test$cluster, levels = c(1:length(test$clusters)))
-        test <- melt(test)
-        ggplot(test, aes(x= clusters , y= variable , fill = value)) + geom_tile() +
+        simpson <- as.data.frame(output_list)
+        simpson$cluster <- rownames(simpson)
+        simpson <- melt(simpson)
+        Var1 <- length(unique(simpson$cluster)) - 1
+        simpson$clusters <- factor(simpson$cluster, levels = c(0, 1:Var1))
+        totalsimpson.optimal <- as.data.frame(totalsimpson.optimal)
+        totalsimpson.optimal$Condition <- rownames(totalsimpson.optimal)
+        totalsimpson.optimal$Placeholder <- rep("A", length(rownames(totalsimpson.optimal)))
+        p <- print(ggplot(simpson, aes(x = clusters , y = variable , fill = value)) + geom_tile() +
                 theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
                 panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
                 panel.background = element_blank(), axis.line = element_line(colour = "white")) +
-                labs(x= "Clusters" , y= NULL) + scale_fill_gradient(low = "black", high = "red", 
-                name= "Variance")
+                labs(x= "Clusters" , y = NULL) + scale_fill_gradient(low = "black", high = "red", 
+                name= "Simpson"))
+        q <- print(ggplot(totalsimpson.optimal, aes(x = Placeholder ,y = Condition, fill = totalsimpson.optimal)) + 
+                geom_tile() + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                panel.background = element_blank(), axis.line = element_line(colour = "white"), 
+                axis.title.x=element_blank(), axis.text.x=element_blank(),
+                axis.ticks.x=element_blank())+ scale_fill_gradient(low = "black", high = "red", 
+                name= "Simpson", limits = c(0, 1)) + labs(y = NULL))
+        ggarrange(p, q, common.legend = TRUE, legend="bottom")
         
-        Var1 <- print(round(mean(totalsimpson), digits=2))
-        Var2 <- print(round(mean(totalsimpson.optimal), digits=2))
-        seurobj@misc$simpson <- Var1
-        seurobj@misc$simpson.optimal <- Var2
+        Var2 <- print(round(mean(totalsimpson), digits=2))
+        Var3 <- print(round(mean(totalsimpson.optimal), digits=2))
+        seurobj@misc$simpson <- Var2
+        seurobj@misc$simpson.optimal <- Var3
         if (Var1 > 2* Var2) {
                 print("Integration is recommended")
         } else {
