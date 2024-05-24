@@ -559,17 +559,18 @@ getSimpson <- function(seurobj, resolution, SCT = c("TRUE", "FALSE")) {
                 theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
                 panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
                 panel.background = element_blank(), axis.line = element_line(colour = "white")) +
-                labs(x= "Clusters" , y = NULL) + scale_fill_gradient(low = "black", high = "yellow", 
-                name= "Simpson") + ggtitle("Simpson per Cluster")
+                labs(x= "Clusters" , y = NULL) + scale_fill_gradient(low = "black", high = "#1AFF1A", 
+                name= "Simpson") + ggtitle("Simpson per Cluster") + theme(plot.title = element_text(hjust = 0.5))
         q <- ggplot(totalsimpson.optimal, aes(x = Placeholder ,y = Condition, fill = totalsimpson.optimal)) + 
-                geom_tile() + theme( panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                geom_tile() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
                 panel.background = element_blank(), axis.line = element_line(colour = "white"), 
-                axis.title.x=element_blank(), axis.text.x=element_blank(),
-                axis.ticks.x=element_blank()) + scale_fill_gradient(low = "black", high = "yellow", 
-                name= "Simpson", limits = c(0, 1)) + labs(y = NULL) + ggtitle("Expected Simpson")
-        print(ggarrange(p, q, common.legend = TRUE, legend="bottom"))
+                axis.text.x=element_blank(),
+                axis.ticks.x=element_blank()) + scale_fill_gradient(low = "black", high = "#1AFF1A", 
+                name= "Simpson", limits = c(0, 1)) + labs(x = "Expected Simpson", y = NULL) + ggtitle("Expected Simpson") +
+                theme(plot.title = element_text(hjust = 0.5))
+        print(ggarrange(p, q, common.legend = TRUE, legend="bottom", widths = c(1,0.5),  align = "h"))
         Var2 <- print(round(mean(totalsimpson), digits=2))
-        Var3 <- print(round(mean(totalsimpson.optimal), digits=2))
+        Var3 <- print(round(mean(totalsimpson.optimal$totalsimpson.optimal), digits=2))
         seurobj@misc$simpson <- Var2
         seurobj@misc$simpson.optimal <- Var3
         if (Var1 > 2* Var2) {
