@@ -514,7 +514,7 @@ getMarkers <- function(seurobj, dim = advisedPCs, SavePlots = c("FALSE", "TRUE")
 
 ## Simpson Index with respect to each condition
 
-getSimpson <- function(seurobj, resolution, SCT = c("TRUE", "FALSE")) {
+getSimpson <- function(seurobj, SCT = c("TRUE", "FALSE")) {
         simpson_index <- function(sample, cluster) {
                 tab <- table(sample, cluster)
                 tab <- t(t(tab)/colSums(tab))
@@ -559,20 +559,23 @@ getSimpson <- function(seurobj, resolution, SCT = c("TRUE", "FALSE")) {
                 theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
                 panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
                 panel.background = element_blank(), axis.line = element_line(colour = "white")) +
-                labs(x= "Clusters" , y = NULL) + scale_fill_gradient(low = "black", high = "#1AFF1A", 
-                name= "Simpson") + ggtitle("Simpson per Cluster") + theme(plot.title = element_text(hjust = 0.5))
+                labs(x= "Clusters" , y = NULL) +  scale_fill_gradientn(colours = c('#ffffcc','#a1dab4','#41b6c4','#2c7fb8','#253494'),
+                values = c(0, 0.25, 0.5, 0.75, 1), name= "Simpson") + theme(plot.title = element_text(hjust = 0.5)) + 
+                ggtitle("Simpson per Cluster")
         q <- ggplot(totalsimpson.optimal, aes(x = Placeholder ,y = Condition, fill = totalsimpson.optimal)) + 
                 geom_tile() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
                 panel.background = element_blank(), axis.line = element_line(colour = "white"), 
-                axis.text.x=element_blank(),
-                axis.ticks.x=element_blank()) + scale_fill_gradient(low = "black", high = "#1AFF1A", 
-                name= "Simpson", limits = c(0, 1)) + labs(x = "Expected Simpson", y = NULL) + ggtitle("Expected Simpson") +
-                theme(plot.title = element_text(hjust = 0.5))
-        print(ggarrange(p, q, common.legend = TRUE, legend="bottom", widths = c(1,0.5),  align = "h"))
+                axis.text.x=element_blank(), axis.ticks.x=element_blank()) + 
+                scale_fill_gradientn(colours = c('#ffffcc','#a1dab4','#41b6c4','#2c7fb8','#253494'),
+                limits = c(0, 1), values = c(0, 0.25, 0.5, 0.75, 1), name= "Simpson") + labs(x = NULL, y = NULL) + 
+                ggtitle("Expected Simpson") + theme(plot.title = element_text(hjust = 0.5)) + 
+                geom_text(aes(label= totalsimpson.optimal))
+        SimpsonPlot <- print(ggarrange(p, q, common.legend = TRUE, legend="bottom", widths = c(1,0.5),  align = "h"))
         Var2 <- print(round(mean(totalsimpson), digits=2))
         Var3 <- print(round(mean(totalsimpson.optimal$totalsimpson.optimal), digits=2))
         seurobj@misc$simpson <- Var2
         seurobj@misc$simpson.optimal <- Var3
+        seurobj@misc$SimpsonPlot <- SimpsonPlot 
         if (Var1 > 2* Var2) {
                 print("Integration is recommended")
         } else {
@@ -581,6 +584,17 @@ getSimpson <- function(seurobj, resolution, SCT = c("TRUE", "FALSE")) {
         return(seurobj)
 }   
 
+## Automatic Annotator
+
+autoAnnotate <- function(seurobj) { 
+        mmusculus.database <- MouseRNAseqData()
+        tmpseurobj[["RNA"]] <- as(seurobj[["RNA"]], Class="Assay")
+        tmpseurobj <- as.SingleCellExperiment(tmpseurobj)
+        pred.hesc <- SingleR(test = tmpseurobj, ref = mmusculus.database, assay.type.test=1, 
+                labels = hpca.se$label.main)
+        seurobj@meta.data$singleR <- pred.hesc$pruned.labels
+
+        
 ## Pseudobulk Expression Matrix
 
 group_rowmeans <- function(MAT, group_labs, type=c("mean","sum")) {
