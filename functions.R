@@ -588,11 +588,12 @@ getSimpson <- function(seurobj, SCT = c("TRUE", "FALSE")) {
 
 autoAnnotate <- function(seurobj) { 
         mmusculus.database <- MouseRNAseqData()
-        tmpseurobj[["RNA"]] <- as(seurobj[["RNA"]], Class="Assay")
+        tmpseurobj <- seurobj
+        tmpseurobj[["RNA"]] <- as(tmpseurobj[["RNA"]], Class="Assay")
         tmpseurobj <- as.SingleCellExperiment(tmpseurobj)
-        pred.hesc <- SingleR(test = tmpseurobj, ref = mmusculus.database, assay.type.test=1, 
-                labels = hpca.se$label.main)
-        seurobj@meta.data$singleR <- pred.hesc$pruned.labels
+        singleR_annot <- SingleR(test = tmpseurobj, ref = mmusculus.database, assay.type.test=1, 
+                labels = mmusculus.database$label.main)
+        seurobj@meta.data$singleR <- singleR_annot$pruned.labels
 
         
 ## Pseudobulk Expression Matrix
