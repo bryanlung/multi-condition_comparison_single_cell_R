@@ -23,6 +23,8 @@ library(ggpubr)
 library(DCATS)
 library(HGNChelper)
 library(openxlsx)
+library(SingleR)
+library(celldex)
 
 ## Preparing Files
 
