@@ -586,13 +586,15 @@ getSimpson <- function(seurobj, SCT = c("TRUE", "FALSE")) {
 
 ## Automatic Annotator
 
+
 autoAnnotate <- function(seurobj) { 
         mmusculus.database <- MouseRNAseqData()
         tmpseurobj <- seurobj
         tmpseurobj[["RNA"]] <- as(tmpseurobj[["RNA"]], Class="Assay")
-        tmpseurobj <- as.SingleCellExperiment(tmpseurobj)
-        singleR_annot <- SingleR(test = tmpseurobj, ref = mmusculus.database, assay.type.test=1, 
-                labels = mmusculus.database$label.main)
+        tmpseurobj <- as.SingleCellExperiment(tmpseurobj, assay = "SCT")
+        ref.exp.labels <- colnames(ref.expr)
+        singleR_annot <- SingleR(test = tmpseurobj, ref = ref.expr, assay.type.test=1, 
+                labels = ref.exp.labels)
         seurobj@meta.data$singleR <- singleR_annot$pruned.labels
 
         
