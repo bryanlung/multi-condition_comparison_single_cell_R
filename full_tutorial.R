@@ -25,6 +25,8 @@ library(HGNChelper)
 library(openxlsx)
 library(SingleR)
 library(celldex)
+library(scMCA)
+
 
 ## Preparing Files
 
