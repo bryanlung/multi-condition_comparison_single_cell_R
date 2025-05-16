@@ -368,7 +368,7 @@ getPCs <- function(seurobj, SavePlots = c("FALSE","TRUE")) {
 
 getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25, 
         start.res = 0.25, end.res = 2, SCT = c("TRUE", "FALSE")) {   
-        seurobj <- FindNeighbors(seurobj, dims = 1:dim, reduction = "pca")
+        seurobj <- FindNeighbors(seurobj, dims = 1:dim, reduction = "integrated.cca")
         for (i in seq(from = start.res, to = end.res, by = sequence)) {
                 seurobj <- FindClusters(seurobj, resolution = i)
         }               
