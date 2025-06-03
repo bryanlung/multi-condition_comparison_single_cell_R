@@ -374,8 +374,7 @@ getClusters <- function(seurobj, dim = advisedPCs, sequence = 0.25,
         seurobj <- FindNeighbors(seurobj, dims = 1:dim, reduction = "integrated.dr")
         for (i in seq(from = start.res, to = end.res, by = sequence)) {
                 seurobj <- FindClusters(seurobj, resolution = i)
-        }    
-        Idents(seurobj) <- seurobj@meta.data[, paste0("RNA_snn_res.", start.res)]
+        } 
         tmp <-  1
         ARI <- c()
         names1 <- c()
